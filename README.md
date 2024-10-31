@@ -1,5 +1,23 @@
 # Mastermind Game Project
 
+
+## Table of Contents
+- [Project Overview](#project-overview)
+- [Team Requirements](#team-requirements)
+- [Project Phases and Tasks](#project-phases-and-tasks)
+  - [Phase 1: Historical Symmetric Key Encryption Algorithms](#phase-1-historical-symmetric-key-encryption-algorithms)
+  - [Phase 2: Modern Symmetric Key Ciphers](#phase-2-modern-symmetric-key-ciphers)
+  - [Phase 3: Game Logic and Rules](#phase-3-game-logic-and-rules)
+  - [Phase 4: Network Communication](#phase-4-network-communication)
+  - [Phase 5: Certification Authority (CA) for Key Distribution](#phase-5-certification-authority-ca-for-key-distribution)
+  - [Phase 6 (Bonus): Graphical User Interface (GUI)](#phase-6-bonus-graphical-user-interface-gui)
+- [Files in the Project](#files-in-the-project)
+- [Starting the Project](#starting-the-project)
+- [Deliverables](#deliverables)
+- [Submission Deadlines](#submission-deadlines)
+
+---
+
 ## Project Overview
 
 This project involves designing and implementing a secure, networked version of the classic Mastermind game. The game allows two players to connect over a network and take turns guessing a hidden sequence of colors chosen by the Codemaster. Secure communication is essential, with encryption applied to all messages exchanged.
