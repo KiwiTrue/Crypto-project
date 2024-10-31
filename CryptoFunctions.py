@@ -238,7 +238,7 @@ def hill_decrypt(encrypted_message, key_matrix):
 def encrypt(message, key, cipher='rsa', **kwargs):
     if cipher == 'rsa':
         encryptor = PKCS1_OAEP.new(key)
-        encrypted = encryptor.encrypt(message.encode())
+        encrypted = encryptor.encrypt(message.encode())  # Message should be a string
         return encrypted
     elif cipher == 'aes':
         session_key = get_random_bytes(16)
