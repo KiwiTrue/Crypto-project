@@ -90,7 +90,7 @@ This project involves designing and implementing a secure, networked version of 
 
 1. **Install Dependencies**:
    ```bash
-   pip install pycryptodome
+   pip install pycryptodome numpy
    ```
 2. **Start Main App**:
    ```bash
