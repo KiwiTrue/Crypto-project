@@ -1,21 +1,29 @@
 # Main.py
 
 import threading
-import os
+import time
 from Codemaster import Codemaster
-from GUI import GameGUI
+from Player import Player
 
-def start_codemasters():
+def start_codemaster():
     codemaster = Codemaster()
     codemaster.start_server()
 
-def start_game_gui():
-    gui = GameGUI()
-    gui.run()
+def start_player():
+    player = Player(name='Player1')
+    player.connect_to_server()
+    player.play_game()
 
 if __name__ == '__main__':
-    threading.Thread(target=start_codemasters).start()
-    if os.environ.get('DISPLAY'):
-        threading.Thread(target=start_game_gui).start()
-    else:
-        print("No display found. Skipping GUI.")
+    # Start the codemaster server in a separate thread
+    codemaster_thread = threading.Thread(target=start_codemaster)
+    codemaster_thread.start()
+
+    # Give the server a moment to start up
+    time.sleep(1)
+
+    # Start the player in the main thread
+    start_player()
+
+    # Wait for the codemaster thread to finish
+    codemaster_thread.join()
