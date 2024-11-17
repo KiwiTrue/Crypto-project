@@ -47,7 +47,7 @@ This project involves designing and implementing a secure, networked version of 
   - 3DES
   - AES
   - Blowfish
-  - RC5
+  - RC4
 
 ### Phase 3: Game Logic and Rules
 - **Objective**: Players attempt to guess the Codemaster's hidden color sequence.
