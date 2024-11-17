@@ -1,0 +1,83 @@
+2024-11-16 03:45:39,693 - main - INFO - SECURITY_EVENT: logger_init - Logger initialized for main
+2024-11-16 03:45:40,031 - main - INFO - SECURITY_EVENT: ca_init - Certification Authority initialized
+2024-11-16 03:45:40,037 - main - INFO - SECURITY_EVENT: thread_start - Codemaster thread started
+2024-11-16 03:45:40,038 - main - INFO - SECURITY_EVENT: thread_start - Player 1 thread started
+2024-11-16 03:45:40,040 - main - INFO - SECURITY_EVENT: thread_start - Player 2 thread started
+2024-11-16 03:45:40,269 - CA - INFO - User codemaster registered successfully
+2024-11-16 03:45:40,270 - codemaster - INFO - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-16 03:45:40,270 - main - ERROR - SECURITY_ERROR: codemaster_error - name 'random' is not defined
+2024-11-16 03:45:41,044 - main - ERROR - SECURITY_ERROR: player_error - Player 2: [Errno 61] Connection refused
+2024-11-16 03:45:41,044 - main - ERROR - SECURITY_ERROR: player_error - Player 1: [Errno 61] Connection refused
+2024-11-16 03:45:41,046 - main - INFO - SECURITY_EVENT: shutdown - Game shutdown complete
+2024-11-16 03:45:54,884 - main - INFO - SECURITY_EVENT: logger_init - Logger initialized for main
+2024-11-16 03:45:55,000 - main - INFO - SECURITY_EVENT: ca_init - Certification Authority initialized
+2024-11-16 03:45:55,000 - main - INFO - SECURITY_EVENT: thread_start - Codemaster thread started
+2024-11-16 03:45:55,001 - main - INFO - SECURITY_EVENT: thread_start - Player 1 thread started
+2024-11-16 03:45:55,417 - CA - INFO - User Player 1 registered successfully
+2024-11-16 03:45:55,590 - CA - INFO - User Player 2 registered successfully
+2024-11-16 03:45:55,592 - CA - INFO - User codemaster registered successfully
+2024-11-16 03:45:55,003 - main - INFO - SECURITY_EVENT: thread_start - Player 2 thread started
+2024-11-16 03:45:55,593 - player_Player 2 - INFO - SECURITY_EVENT: logger_init - Logger initialized for player_Player 2
+2024-11-16 03:45:55,593 - codemaster - INFO - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-16 03:45:55,594 - main - INFO - SECURITY_EVENT: player_init - Player Player 2 initialized
+2024-11-16 03:45:55,594 - player_Player 1 - INFO - SECURITY_EVENT: logger_init - Logger initialized for player_Player 1
+2024-11-16 03:45:55,594 - main - ERROR - SECURITY_ERROR: codemaster_error - name 'random' is not defined
+2024-11-16 03:45:55,595 - main - INFO - SECURITY_EVENT: player_init - Player Player 1 initialized
+2024-11-16 03:45:55,597 - player_Player 2 - ERROR - SECURITY_ERROR: handshake_failed - [Errno 54] Connection reset by peer
+2024-11-16 03:45:55,597 - player_Player 1 - ERROR - SECURITY_ERROR: handshake_failed - [Errno 54] Connection reset by peer
+2024-11-16 03:45:55,600 - player_Player 2 - ERROR - SECURITY_ERROR: connection_failed - Failed to establish secure connection
+2024-11-16 03:45:55,600 - player_Player 1 - ERROR - SECURITY_ERROR: connection_failed - Failed to establish secure connection
+2024-11-16 03:45:55,601 - player_Player 2 - INFO - SECURITY_EVENT: session_end - Player Player 2 disconnected
+2024-11-16 03:45:55,601 - player_Player 1 - INFO - SECURITY_EVENT: session_end - Player Player 1 disconnected
+2024-11-16 03:45:55,601 - main - INFO - SECURITY_EVENT: shutdown - Game shutdown complete
+2024-11-16 03:47:47,974 - main - INFO - SECURITY_EVENT: logger_init - Logger initialized for main
+2024-11-16 03:47:48,128 - main - INFO - SECURITY_EVENT: ca_init - Certification Authority initialized
+2024-11-16 03:47:48,128 - main - INFO - SECURITY_EVENT: thread_start - Codemaster thread started
+2024-11-16 03:47:48,473 - CA - INFO - User codemaster registered successfully
+2024-11-16 03:47:48,474 - codemaster - INFO - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-16 03:47:48,474 - main - INFO - SECURITY_EVENT: codemaster_init - Codemaster initialized with sequence
+2024-11-16 03:47:49,133 - main - INFO - SECURITY_EVENT: thread_start - Player 1 thread started
+2024-11-16 03:47:50,005 - CA - INFO - User Player 1 registered successfully
+2024-11-16 03:47:50,005 - main - INFO - SECURITY_EVENT: thread_start - Player 2 thread started
+2024-11-16 03:47:50,003 - codemaster - ERROR - SECURITY_ERROR: handshake_failed - a bytes-like object is required, not 'cryptography.hazmat.bindings._rust.x509.Certificate'
+2024-11-16 03:47:50,006 - codemaster - INFO - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 57894) disconnected
+2024-11-16 03:47:50,006 - player_Player 1 - INFO - SECURITY_EVENT: logger_init - Logger initialized for player_Player 1
+2024-11-16 03:47:50,007 - main - INFO - SECURITY_EVENT: player_init - Player Player 1 initialized
+2024-11-16 03:47:50,007 - codemaster - INFO - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 57894) disconnected
+2024-11-16 03:47:50,293 - CA - INFO - User Player 2 registered successfully
+2024-11-16 03:47:50,294 - CA - ERROR - Certificate verification failed: 'bytes' object has no attribute 'serial_number'
+2024-11-16 03:47:50,294 - codemaster - ERROR - SECURITY_ERROR: handshake_failed - a bytes-like object is required, not 'cryptography.hazmat.bindings._rust.x509.Certificate'
+2024-11-16 03:47:50,294 - player_Player 1 - ERROR - SECURITY_ERROR: connection_failed - Failed to establish secure connection
+2024-11-16 03:47:50,295 - player_Player 2 - INFO - SECURITY_EVENT: logger_init - Logger initialized for player_Player 2
+2024-11-16 03:47:50,295 - player_Player 1 - INFO - SECURITY_EVENT: session_end - Player Player 1 disconnected
+2024-11-16 03:47:50,295 - codemaster - INFO - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 57895) disconnected
+2024-11-16 03:47:50,296 - main - INFO - SECURITY_EVENT: player_init - Player Player 2 initialized
+2024-11-16 03:47:50,296 - codemaster - INFO - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 57895) disconnected
+2024-11-16 03:47:54,515 - main - INFO - SECURITY_EVENT: shutdown - Game shutdown complete
+2024-11-16 03:50:07,785 - main - INFO - SECURITY_EVENT: logger_init - Logger initialized for main
+2024-11-16 03:50:07,876 - main - INFO - SECURITY_EVENT: ca_init - Certification Authority initialized
+2024-11-16 03:50:08,065 - CA - INFO - User codemaster registered successfully
+2024-11-16 03:50:08,066 - codemaster - INFO - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-16 03:50:08,066 - main - INFO - SECURITY_EVENT: codemaster_init - Codemaster initialized with sequence
+2024-11-16 04:09:30,331 - codemaster - ERROR - SECURITY_ERROR: handshake_failed - a bytes-like object is required, not 'cryptography.hazmat.bindings._rust.x509.Certificate'
+2024-11-16 04:09:30,331 - codemaster - INFO - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 58194) disconnected
+2024-11-16 04:09:30,331 - codemaster - INFO - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 58194) disconnected
+2024-11-16 04:11:33,012 - codemaster - ERROR - SECURITY_ERROR: handshake_failed - a bytes-like object is required, not 'cryptography.hazmat.bindings._rust.x509.Certificate'
+2024-11-16 04:11:33,012 - codemaster - INFO - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 58214) disconnected
+2024-11-16 04:11:33,013 - codemaster - INFO - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 58214) disconnected
+2024-11-16 04:11:53,446 - codemaster - ERROR - SECURITY_ERROR: handshake_failed - a bytes-like object is required, not 'cryptography.hazmat.bindings._rust.x509.Certificate'
+2024-11-16 04:11:53,446 - codemaster - INFO - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 58217) disconnected
+2024-11-16 04:11:53,446 - codemaster - INFO - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 58217) disconnected
+2024-11-16 04:13:48,517 - main - INFO - SECURITY_EVENT: shutdown - Game shutdown initiated
+2024-11-16 04:13:50,518 - main - INFO - SECURITY_EVENT: shutdown - Game shutdown complete
+2024-11-16 04:14:41,322 - main - INFO - SECURITY_EVENT: logger_init - Logger initialized for main
+2024-11-16 04:14:41,564 - main - INFO - SECURITY_EVENT: ca_init - Certification Authority initialized
+2024-11-16 04:14:41,820 - CA - INFO - User codemaster registered successfully
+2024-11-16 04:14:41,821 - codemaster - INFO - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-16 04:14:41,821 - main - INFO - SECURITY_EVENT: codemaster_init - Codemaster initialized with sequence
+2024-11-16 04:16:19,503 - codemaster - ERROR - SECURITY_ERROR: handshake_failed - name 'serialization' is not defined
+2024-11-16 04:16:19,503 - codemaster - INFO - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 58303) disconnected
+2024-11-16 04:16:19,503 - codemaster - INFO - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 58303) disconnected
+2024-11-16 04:16:22,989 - codemaster - ERROR - SECURITY_ERROR: handshake_failed - name 'serialization' is not defined
+2024-11-16 04:16:22,989 - codemaster - INFO - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 58304) disconnected
+2024-11-16 04:16:22,989 - codemaster - INFO - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 58304) disconnected

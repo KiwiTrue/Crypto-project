@@ -1,0 +1,16 @@
+2024-11-16 04:09:30,665 - player_player1 - INFO - [15357] - SECURITY_EVENT: logger_init - Logger initialized for player_player1
+2024-11-16 04:09:40,666 - player_player1 - ERROR - [15357] - SECURITY_ERROR: handshake_failed - timed out
+2024-11-16 04:09:40,667 - player_player1 - ERROR - [15357] - SECURITY_ERROR: connection_failed - Failed to establish secure connection
+2024-11-16 04:09:40,668 - player_player1 - INFO - [15357] - SECURITY_EVENT: session_end - Player player1 disconnected
+2024-11-16 04:11:33,355 - player_player1 - INFO - [15416] - SECURITY_EVENT: logger_init - Logger initialized for player_player1
+2024-11-16 04:11:43,356 - player_player1 - ERROR - [15416] - SECURITY_ERROR: handshake_failed - timed out
+2024-11-16 04:11:43,357 - player_player1 - ERROR - [15416] - SECURITY_ERROR: connection_failed - Failed to establish secure connection
+2024-11-16 04:11:43,357 - player_player1 - INFO - [15416] - SECURITY_EVENT: session_end - Player player1 disconnected
+2024-11-16 04:11:53,640 - player_player1 - INFO - [15426] - SECURITY_EVENT: logger_init - Logger initialized for player_player1
+2024-11-16 04:12:03,641 - player_player1 - ERROR - [15426] - SECURITY_ERROR: handshake_failed - timed out
+2024-11-16 04:12:03,642 - player_player1 - ERROR - [15426] - SECURITY_ERROR: connection_failed - Failed to establish secure connection
+2024-11-16 04:12:03,642 - player_player1 - INFO - [15426] - SECURITY_EVENT: session_end - Player player1 disconnected
+2024-11-16 04:16:19,602 - player_player1 - INFO - [15615] - SECURITY_EVENT: logger_init - Logger initialized for player_player1
+2024-11-16 04:16:22,989 - player_player1 - ERROR - [15615] - SECURITY_ERROR: handshake_failed - Unable to load PEM file. See https://cryptography.io/en/latest/faq/#why-can-t-i-import-my-pem-file for more details. MalformedFraming
+2024-11-16 04:16:22,989 - player_player1 - ERROR - [15615] - SECURITY_ERROR: connection_failed - Failed to establish secure connection
+2024-11-16 04:16:22,990 - player_player1 - INFO - [15615] - SECURITY_EVENT: session_end - Player player1 disconnected

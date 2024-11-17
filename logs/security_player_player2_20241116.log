@@ -1,0 +1,4 @@
+2024-11-16 04:16:23,136 - player_player2 - INFO - [15619] - SECURITY_EVENT: logger_init - Logger initialized for player_player2
+2024-11-16 04:16:33,138 - player_player2 - ERROR - [15619] - SECURITY_ERROR: handshake_failed - timed out
+2024-11-16 04:16:33,139 - player_player2 - ERROR - [15619] - SECURITY_ERROR: connection_failed - Failed to establish secure connection
+2024-11-16 04:16:33,139 - player_player2 - INFO - [15619] - SECURITY_EVENT: session_end - Player player2 disconnected
