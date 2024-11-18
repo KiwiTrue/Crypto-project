@@ -32,6 +32,7 @@ class Player:
         self.secure_channel: Optional[SecureMessage] = None
         self.logger = SecurityLogger(f'player_{name}')
         self.session: Optional[GameSession] = None
+        self.on_message = lambda x: print(f"Server: {x}")  # Add callback
 
     def handle_key_rotation(self, encrypted_key_data: dict) -> bool:
         try:
@@ -60,7 +61,7 @@ class Player:
                 return self.handle_key_rotation(data['key_rotation'])
             elif 'feedback' in data:
                 feedback = self.secure_channel.decrypt(data['feedback'])
-                print(f"Server: {feedback}")
+                self.on_message(feedback)  # Use callback instead of print
                 return "Game Over" not in feedback
             return True
         except json.JSONDecodeError:

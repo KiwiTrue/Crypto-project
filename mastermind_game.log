@@ -81,3 +81,17 @@
 2024-11-16 04:16:22,989 - codemaster - ERROR - SECURITY_ERROR: handshake_failed - name 'serialization' is not defined
 2024-11-16 04:16:22,989 - codemaster - INFO - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 58304) disconnected
 2024-11-16 04:16:22,989 - codemaster - INFO - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 58304) disconnected
+2024-11-18 15:42:04,839 - main - INFO - SECURITY_EVENT: logger_init - Logger initialized for main
+2024-11-18 15:42:04,868 - main - INFO - SECURITY_EVENT: ca_init - Certification Authority initialized
+2024-11-18 15:42:04,904 - CA - INFO - User codemaster registered successfully
+2024-11-18 15:42:04,905 - codemaster - INFO - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-18 15:42:04,905 - main - INFO - SECURITY_EVENT: codemaster_init - Codemaster initialized with sequence
+2024-11-18 15:42:21,961 - main - INFO - SECURITY_EVENT: shutdown - Game shutdown initiated
+2024-11-18 15:42:23,968 - main - INFO - SECURITY_EVENT: shutdown - Game shutdown complete
+2024-11-18 15:44:29,676 - main - INFO - SECURITY_EVENT: logger_init - Logger initialized for main
+2024-11-18 15:44:29,722 - main - INFO - SECURITY_EVENT: ca_init - Certification Authority initialized
+2024-11-18 15:44:29,764 - CA - INFO - User codemaster registered successfully
+2024-11-18 15:44:29,765 - codemaster - INFO - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-18 15:44:29,766 - main - INFO - SECURITY_EVENT: codemaster_init - Codemaster initialized with sequence
+2024-11-18 15:44:42,804 - main - INFO - SECURITY_EVENT: shutdown - Game shutdown initiated
+2024-11-18 15:44:44,820 - main - INFO - SECURITY_EVENT: shutdown - Game shutdown complete

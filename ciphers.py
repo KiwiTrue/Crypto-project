@@ -6,12 +6,12 @@ import numpy as np
 import json
 import math
 from typing import Union, Dict, List, Any
+import os
 
 # 
 # 
 # Helper functions
 def create_playfair_matrix(key):
-    # Implementation of 5x5 Playfair matrix creation
     matrix = []
     key = ''.join(dict.fromkeys(key.upper().replace('J', 'I')))
     alphabet = 'ABCDEFGHIKLMNOPQRSTUVWXYZ'
@@ -239,36 +239,41 @@ def aes_decrypt(data, key):
     cipher = Cipher(algorithms.AES(key), modes.CBC(key[:16]))
     decryptor = cipher.decryptor()
     return decryptor.update(data) + decryptor.finalize()
+    decryptor = cipher.decryptor()
+    return decryptor.update(data['data']) + decryptor.finalize()
 
 def des_encrypt(data, key, mode=modes.CBC):
-    cipher = Cipher(algorithms.DES(key), mode(key[:8]))
+    iv = os.urandom(8)
+    cipher = Cipher(algorithms.DES(key), mode(iv))
     encryptor = cipher.encryptor()
-    return encryptor.update(data) + encryptor.finalize()
+    return {'iv': iv, 'data': encryptor.update(data) + encryptor.finalize()}
 
 def des_decrypt(data, key, mode=modes.CBC):
-    cipher = Cipher(algorithms.DES(key), mode(key[:8]))
+    cipher = Cipher(algorithms.DES(key), mode(data['iv']))
     decryptor = cipher.decryptor()
-    return decryptor.update(data) + decryptor.finalize()
+    return decryptor.update(data['data']) + decryptor.finalize()
 
 def triple_des_encrypt(data, key, mode=modes.CBC):
-    cipher = Cipher(algorithms.TripleDES(key), mode(key[:8]))
+    iv = os.urandom(8)
+    cipher = Cipher(algorithms.TripleDES(key), mode(iv))
     encryptor = cipher.encryptor()
-    return encryptor.update(data) + encryptor.finalize()
+    return {'iv': iv, 'data': encryptor.update(data) + encryptor.finalize()}
 
 def triple_des_decrypt(data, key, mode=modes.CBC):
-    cipher = Cipher(algorithms.TripleDES(key), mode(key[:8]))
+    cipher = Cipher(algorithms.TripleDES(key), mode(data['iv']))
     decryptor = cipher.decryptor()
-    return decryptor.update(data) + decryptor.finalize()
+    return decryptor.update(data['data']) + decryptor.finalize()
 
 def blowfish_encrypt(data, key, mode=modes.CBC):
-    cipher = Cipher(algorithms.Blowfish(key), mode(key[:8]))
+    iv = os.urandom(8)
+    cipher = Cipher(algorithms.Blowfish(key), mode(iv))
     encryptor = cipher.encryptor()
-    return encryptor.update(data) + encryptor.finalize()
+    return {'iv': iv, 'data': encryptor.update(data) + encryptor.finalize()}
 
 def blowfish_decrypt(data, key, mode=modes.CBC):
-    cipher = Cipher(algorithms.Blowfish(key), mode(key[:8]))
+    cipher = Cipher(algorithms.Blowfish(key), mode(data['iv']))
     decryptor = cipher.decryptor()
-    return decryptor.update(data) + decryptor.finalize()
+    return decryptor.update(data['data']) + decryptor.finalize()
 
 def rc4_encrypt(data, key):
     if isinstance(data, str):
@@ -353,6 +358,7 @@ class SecureMessage:
                 'RC4': lambda d: rc4_decrypt(d, self.key)
             }
             
+
             
             return decryption_methods[secure_message['cipher']](secure_message['data'])
         except Exception as e:

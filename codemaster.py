@@ -34,6 +34,13 @@ class Codemaster:
         self.active_connections: Dict[socket.socket, GameSession] = {}
         self.connection_lock = Lock()
         self.player_count = 0
+        self.current_player = 0
+        self.total_players = 2
+        self.game_state = {
+            'sequence': [],
+            'turns': [],
+            'winner': None
+        }
 
     def handle_player_disconnect(self, conn: socket.socket, addr: Tuple[str, int]) -> None:
         with self.connection_lock:
@@ -218,6 +225,18 @@ class Codemaster:
             'feedback': feedback
         }
         self.broadcast_message(message)
+
+    def handle_player_turn(self, conn: socket.socket, player_id: int) -> None:
+        if player_id != self.current_player:
+            return {'error': 'Not your turn'}
+            
+        # Process turn
+        result = self.process_player_turn(conn, player_id)
+        
+        # Update turn
+        self.current_player = (self.current_player + 1) % self.total_players
+        
+        return result
 
     def run(self):
         print("\nCodemaster is ready and listening for connections...")
