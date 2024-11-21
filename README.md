@@ -58,7 +58,7 @@ tkinter (included with Python)
 
 ### Installation
 ```bash
-git clone [https://github.com/KiwiTrue/mastermind-secure.git](https://github.com/KiwiTrue/Crypto-project.git)
+git clone https://github.com/KiwiTrue/Crypto-project.git
 cd mastermind-secure
 pip install numpy cryptography
 ```
