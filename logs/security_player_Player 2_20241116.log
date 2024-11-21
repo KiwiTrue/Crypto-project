@@ -1,5 +1,0 @@
-2024-11-16 03:45:55,593 - player_Player 2 - INFO - [14573] - SECURITY_EVENT: logger_init - Logger initialized for player_Player 2
-2024-11-16 03:45:55,597 - player_Player 2 - ERROR - [14573] - SECURITY_ERROR: handshake_failed - [Errno 54] Connection reset by peer
-2024-11-16 03:45:55,600 - player_Player 2 - ERROR - [14573] - SECURITY_ERROR: connection_failed - Failed to establish secure connection
-2024-11-16 03:45:55,601 - player_Player 2 - INFO - [14573] - SECURITY_EVENT: session_end - Player Player 2 disconnected
-2024-11-16 03:47:50,295 - player_Player 2 - INFO - [14648] - SECURITY_EVENT: logger_init - Logger initialized for player_Player 2

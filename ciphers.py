@@ -1,12 +1,13 @@
 import random
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from cryptography.hazmat.primitives import hashes, hmac
-from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes, hmac, padding
+from cryptography.hazmat.primitives.asymmetric import padding as asym_padding
 import numpy as np
 import json
 import math
 from typing import Union, Dict, List, Any
 import os
+import base64
 
 # 
 # 
@@ -231,16 +232,22 @@ def affine_decrypt(data: str, a: int, b: int) -> str:
 
 # Modern Symmetric Ciphers
 def aes_encrypt(data, key):
+    # Add PKCS7 padding
+    padder = padding.PKCS7(128).padder()
+    padded_data = padder.update(data) + padder.finalize()
+    
     cipher = Cipher(algorithms.AES(key), modes.CBC(key[:16]))
     encryptor = cipher.encryptor()
-    return encryptor.update(data) + encryptor.finalize()
+    return encryptor.update(padded_data) + encryptor.finalize()
 
 def aes_decrypt(data, key):
     cipher = Cipher(algorithms.AES(key), modes.CBC(key[:16]))
     decryptor = cipher.decryptor()
-    return decryptor.update(data) + decryptor.finalize()
-    decryptor = cipher.decryptor()
-    return decryptor.update(data['data']) + decryptor.finalize()
+    decrypted_data = decryptor.update(data) + decryptor.finalize()
+    
+    # Remove padding
+    unpadder = padding.PKCS7(128).unpadder()
+    return unpadder.update(decrypted_data) + unpadder.finalize()
 
 def des_encrypt(data, key, mode=modes.CBC):
     iv = os.urandom(8)
@@ -287,6 +294,11 @@ def rc4_encrypt(data, key):
 def rc4_decrypt(data, key):
     result = rc4_encrypt(data, key)  # RC4 is symmetric
     return result if isinstance(data, bytes) else result.decode()
+
+def unpad_data(padded_data: bytes) -> bytes:
+    """Remove PKCS7 padding from data"""
+    unpadder = padding.PKCS7(128).unpadder()
+    return unpadder.update(padded_data) + unpadder.finalize()
 
 class SecureMessage:
     SUPPORTED_CIPHERS = {
@@ -338,6 +350,12 @@ class SecureMessage:
         try:
             if not all(k in secure_message for k in ['cipher', 'data', 'mac']):
                 raise ValueError("Invalid secure message format")
+            
+            # Convert base64 encoded data back to bytes
+            if isinstance(secure_message['data'], str):
+                secure_message['data'] = base64.b64decode(secure_message['data'])
+            if isinstance(secure_message['mac'], str):
+                secure_message['mac'] = base64.b64decode(secure_message['mac'])
                 
             # Verify HMAC
             key_bytes = self.key if isinstance(self.key, bytes) else self.key.encode()
@@ -347,6 +365,8 @@ class SecureMessage:
                 h.verify(secure_message['mac'])
             except Exception:
                 raise ValueError("Message authentication failed")
+                
+            # Decrypt the data
             decryption_methods = {
                 'CAESAR': lambda d: caesar_decrypt(d, int.from_bytes(self.key[:1], 'big')),
                 'MONOALPHABETIC': lambda d: monoalphabetic_decrypt(d, self.key),
@@ -358,8 +378,12 @@ class SecureMessage:
                 'RC4': lambda d: rc4_decrypt(d, self.key)
             }
             
-
+            decrypted = decryption_methods[secure_message['cipher']](secure_message['data'])
             
-            return decryption_methods[secure_message['cipher']](secure_message['data'])
+            # Handle bytes vs string output
+            if isinstance(decrypted, bytes):
+                return unpad_data(decrypted).decode()
+            return decrypted
+            
         except Exception as e:
             raise RuntimeError(f"Decryption failed: {str(e)}")

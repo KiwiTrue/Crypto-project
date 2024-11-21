@@ -1,3 +1,6 @@
+"""
+Certification Authority module - Handles certificates and key distribution
+"""
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import serialization, hashes
 from cryptography import x509
@@ -37,7 +40,7 @@ class CertificationAuthority:
             self.logger.info(f"User {user_id} registered successfully")
             return cert
         except Exception as e:
-            self.logger.error(f"Failed to register user {user_id}: {str(e)}")
+            self.logger.log_error(f"Failed to register user {user_id}: {str(e)}")
             raise
 
     def create_certificate(self, public_key, user_id):
@@ -80,7 +83,7 @@ class CertificationAuthority:
             certificate.verify_directly_issued_by(ca_cert)
             return True
         except Exception as e:
-            self.logger.error(f"Certificate verification failed: {str(e)}")
+            self.logger.log_error(f"Certificate verification failed: {str(e)}")
             return False
 
     def get_ca_certificate(self):
@@ -117,7 +120,7 @@ class CertificationAuthority:
                         'key': encrypted_key
                     }
                 except Exception as e:
-                    self.logger.error(f"Failed to encrypt key for user {uid}: {str(e)}")
+                    self.logger.log_error(f"Failed to encrypt key for user {uid}: {str(e)}")
 
         return encrypted_keys
 

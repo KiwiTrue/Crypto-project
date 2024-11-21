@@ -1,0 +1,60 @@
+2024-11-21 16:24:24,157 - codemaster - INFO - [12924] - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-21 16:24:28,677 - codemaster - ERROR - [12924] - SECURITY_ERROR: handshake_failed - Object of type bytes is not JSON serializable
+2024-11-21 16:24:28,698 - codemaster - INFO - [12924] - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 49594) disconnected
+2024-11-21 16:24:28,698 - codemaster - INFO - [12924] - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 49594) disconnected
+2024-11-21 16:31:14,480 - codemaster - INFO - [16808] - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-21 16:31:21,069 - codemaster - ERROR - [16808] - SECURITY_ERROR: player_handler_error - 0
+2024-11-21 16:31:21,070 - codemaster - INFO - [16808] - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 49646) disconnected
+2024-11-21 16:41:13,169 - codemaster - INFO - [11332] - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-21 16:41:32,510 - codemaster - INFO - [16992] - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-21 16:41:54,027 - codemaster - ERROR - [16992] - SECURITY_ERROR: player_handler_error - Codemaster.setup_secure_channel() missing 1 required positional argument: 'player_public_key'
+2024-11-21 16:41:54,028 - codemaster - INFO - [16992] - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 49795) disconnected
+2024-11-21 16:43:21,457 - codemaster - INFO - [9892] - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-21 16:43:34,194 - codemaster - ERROR - [9892] - SECURITY_ERROR: player_handler_error - Unable to load PEM file. See https://cryptography.io/en/latest/faq/#why-can-t-i-import-my-pem-file for more details. MalformedFraming
+2024-11-21 16:43:34,197 - codemaster - INFO - [9892] - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 49828) disconnected
+2024-11-21 16:46:47,513 - codemaster - INFO - [5716] - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-21 16:52:58,050 - codemaster - ERROR - [5716] - SECURITY_ERROR: player_handler_error - Unable to load PEM file. See https://cryptography.io/en/latest/faq/#why-can-t-i-import-my-pem-file for more details. MalformedFraming
+2024-11-21 16:52:58,053 - codemaster - INFO - [5716] - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 49878) disconnected
+2024-11-21 16:53:24,009 - codemaster - ERROR - [5716] - SECURITY_ERROR: player_handler_error - Unable to load PEM file. See https://cryptography.io/en/latest/faq/#why-can-t-i-import-my-pem-file for more details. MalformedFraming
+2024-11-21 16:53:24,012 - codemaster - INFO - [5716] - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 49868) disconnected
+2024-11-21 16:55:06,282 - codemaster - INFO - [11332] - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-21 16:57:03,364 - codemaster - INFO - [2528] - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-21 16:58:17,128 - codemaster - INFO - [7476] - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-21 16:59:06,777 - codemaster - ERROR - [7476] - SECURITY_ERROR: turn_processing_error - Encryption failed: The length of the provided data is not a multiple of the block length.
+2024-11-21 17:00:38,988 - codemaster - INFO - [5856] - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-21 17:37:30,558 - codemaster - INFO - [11468] - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-21 17:37:44,520 - codemaster - INFO - [4300] - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-21 17:38:35,051 - codemaster - ERROR - [4300] - SECURITY_ERROR: turn_processing_error - Decryption failed: name 'GameSession' is not defined
+2024-11-21 17:39:38,972 - codemaster - ERROR - [4300] - SECURITY_ERROR: turn_processing_error - Decryption failed: name 'GameSession' is not defined
+2024-11-21 17:41:14,459 - codemaster - INFO - [15712] - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-21 17:41:48,939 - codemaster - ERROR - [15712] - SECURITY_ERROR: turn_processing_error - 'str' object has no attribute 'decode'
+2024-11-21 17:43:00,587 - codemaster - ERROR - [15712] - SECURITY_ERROR: turn_processing_error - 'str' object has no attribute 'decode'
+2024-11-21 17:43:08,540 - codemaster - INFO - [12228] - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-21 17:45:09,336 - codemaster - INFO - [7776] - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-21 17:46:10,164 - codemaster - ERROR - [7776] - SECURITY_ERROR: broadcast_failed - [WinError 10053] An established connection was aborted by the software in your host machine
+2024-11-21 17:46:10,164 - codemaster - INFO - [7776] - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 50309) disconnected
+2024-11-21 17:46:10,165 - codemaster - INFO - [7776] - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 50310) disconnected
+2024-11-21 17:49:08,818 - codemaster - INFO - [15956] - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-21 17:49:48,475 - codemaster - INFO - [15956] - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 50343) disconnected
+2024-11-21 17:59:27,612 - codemaster - INFO - [14580] - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-21 17:59:35,816 - codemaster - INFO - [14580] - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 50515) disconnected
+2024-11-21 17:59:48,003 - codemaster - INFO - [14580] - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 50517) disconnected
+2024-11-21 18:02:47,194 - codemaster - INFO - [11596] - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-21 18:04:17,061 - codemaster - ERROR - [11596] - SECURITY_ERROR: turn_processing_error - Extra data: line 1 column 149 (char 148)
+2024-11-21 18:04:17,084 - codemaster - ERROR - [11596] - SECURITY_ERROR: socket_error - [WinError 10053] An established connection was aborted by the software in your host machine
+2024-11-21 18:04:17,084 - codemaster - ERROR - [11596] - SECURITY_ERROR: turn_processing_error - [WinError 10053] An established connection was aborted by the software in your host machine
+2024-11-21 18:04:17,085 - codemaster - INFO - [11596] - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 50548) disconnected
+2024-11-21 18:04:17,087 - codemaster - ERROR - [11596] - SECURITY_ERROR: socket_error - [WinError 10053] An established connection was aborted by the software in your host machine
+2024-11-21 18:04:17,087 - codemaster - INFO - [11596] - SECURITY_EVENT: player_disconnect - Player at ('127.0.0.1', 50547) disconnected
+2024-11-21 18:05:49,761 - codemaster - INFO - [14496] - SECURITY_EVENT: logger_init - Logger initialized for codemaster
+2024-11-21 18:06:10,472 - codemaster - ERROR - [14496] - SECURITY_ERROR: turn_processing_error - timed out
+2024-11-21 18:06:56,120 - codemaster - ERROR - [14496] - SECURITY_ERROR: turn_processing_error - timed out
+2024-11-21 18:07:04,798 - codemaster - ERROR - [14496] - SECURITY_ERROR: turn_processing_error - timed out
+2024-11-21 18:07:13,488 - codemaster - ERROR - [14496] - SECURITY_ERROR: turn_processing_error - timed out
+2024-11-21 18:07:28,369 - codemaster - ERROR - [14496] - SECURITY_ERROR: turn_processing_error - timed out
+2024-11-21 18:07:30,914 - codemaster - ERROR - [14496] - SECURITY_ERROR: turn_processing_error - timed out
+2024-11-21 18:07:51,754 - codemaster - ERROR - [14496] - SECURITY_ERROR: turn_processing_error - timed out
+2024-11-21 18:07:57,846 - codemaster - ERROR - [14496] - SECURITY_ERROR: turn_processing_error - timed out
+2024-11-21 18:08:00,928 - codemaster - ERROR - [14496] - SECURITY_ERROR: turn_processing_error - timed out
+2024-11-21 18:08:05,029 - codemaster - ERROR - [14496] - SECURITY_ERROR: turn_processing_error - timed out
+2024-11-21 18:08:06,554 - codemaster - ERROR - [14496] - SECURITY_ERROR: turn_processing_error - timed out

@@ -1,34 +1,41 @@
+"""
+Player module - Implements the game client
+"""
 import socket
 import random  # Add this import for the random player name generation
 from typing import Optional, Union
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography import x509
 from ciphers import SecureMessage
 from logger import SecurityLogger
 from session import GameSession
-from CA import CertificationAuthority
+from secure_protocol import SecureProtocol
 import json
 import traceback
 import sys
+import base64  # Add this import at the top of the file
 
 class Player:
-    def __init__(self, name: str, ca, host: str = 'localhost', port: int = 12345):
+    """
+    Player class - Handles game client functionality
+    
+    Attributes:
+        name (str): Player name
+        client (socket): Client socket connection
+        session (GameSession): Current game session
+        game_active (bool): Game state flag
+    """
+    
+    def __init__(self, name: str, host: str = 'localhost', port: int = 12345):
         self.name = name
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client.settimeout(10)  # Add timeout
+        self.client.settimeout(30)  # Increased timeout to 30 seconds
         try:
             self.client.connect((host, port))
         except socket.error as e:
             raise ConnectionError(f"Failed to connect to server: {str(e)}")
         self.game_active = True
-        self.private_key = rsa.generate_private_key(
-            public_exponent=65537,
-            key_size=2048
-        )
-        self.public_key = self.private_key.public_key()
-        self.ca = ca
-        self.cert = ca.register_user(name, self.public_key)
+        self.private_key, self.public_key = SecureProtocol.generate_keypair(f"player_{name}")
         self.secure_channel: Optional[SecureMessage] = None
         self.logger = SecurityLogger(f'player_{name}')
         self.session: Optional[GameSession] = None
@@ -79,11 +86,25 @@ class Player:
                 # Pad and encrypt guess
                 padded_guess = GameSession.pad_data(normalized_guess.encode())
                 secure_msg = self.secure_channel.encrypt(padded_guess)
+                
+                # Convert bytes to base64 for JSON serialization
+                if isinstance(secure_msg.get('data'), bytes):
+                    secure_msg['data'] = base64.b64encode(secure_msg['data']).decode('utf-8')
+                if isinstance(secure_msg.get('mac'), bytes):
+                    secure_msg['mac'] = base64.b64encode(secure_msg['mac']).decode('utf-8')
+                
                 self.client.send(json.dumps(secure_msg).encode())
                 
-                # Receive and process response
-                response = self.client.recv(1024).decode()
-                return self.process_server_response(response)
+                # Add timeout handling
+                try:
+                    response = self.client.recv(1024).decode()
+                    return self.process_server_response(response)
+                except socket.timeout:
+                    print("\nServer response timed out. The game might have ended.")
+                    return False
+                except ConnectionError:
+                    print("\nLost connection to the server.")
+                    return False
             else:
                 self.logger.log_error('secure_channel_missing', 'No secure channel established')
                 return False
@@ -93,32 +114,49 @@ class Player:
             return False
 
     def handshake(self) -> bool:
+        """
+        Performs secure handshake with server
+        
+        Returns:
+            bool: True if handshake successful, False otherwise
+        """
         try:
-            # Receive and deserialize server's certificate
-            server_cert_bytes = self.client.recv(4096)
-            server_cert = x509.load_pem_x509_certificate(server_cert_bytes)
+            # Share supported ciphers
+            supported_ciphers = SecureProtocol.SUPPORTED_CIPHERS
+            self.client.send(json.dumps(supported_ciphers).encode())
             
-            if not self.ca.verify_certificate(server_cert):
-                return False
-                
-            # Serialize and send our certificate
-            cert_bytes = self.cert.public_bytes(serialization.Encoding.PEM)
-            self.client.send(cert_bytes)
+            # Export and send public key in proper PEM format
+            pem_key = SecureProtocol.export_public_key(self.public_key)
+            self.client.send(pem_key)  # Send raw PEM bytes
             
-            # Receive encrypted session key
-            encrypted_key_data = json.loads(self.client.recv(1024).decode())
-            self.establish_secure_channel(encrypted_key_data)
+            # Receive server's public key
+            server_public_key_bytes = self.client.recv(4096)
+            server_public_key = serialization.load_pem_public_key(
+                server_public_key_bytes,
+                backend=None
+            )
             
-            # Receive session data
-            session_data = json.loads(self.client.recv(1024).decode())
-            self.session = GameSession(session_data['session'], 'AES')
-            self.establish_secure_channel(session_data['keys'])
+            # Receive cipher choice and encrypted session key
+            response = json.loads(self.client.recv(1024).decode())
+            cipher_type = response['cipher']
+            # Decode base64 key
+            encrypted_key = base64.b64decode(response['key'])
             
-            self.logger.log_security_event('handshake_success', 
-                                         f'Session: {self.session.session_id}')
+            # Decrypt session key and establish secure channel
+            session_key = self.private_key.decrypt(
+                encrypted_key,
+                padding.OAEP(
+                    mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                    algorithm=hashes.SHA256(),
+                    label=None
+                )
+            )
+            
+            self.secure_channel = SecureMessage(cipher_type, session_key)
             return True
+            
         except Exception as e:
-            self.logger.log_error('handshake_failed', str(e))
+            self.logger.log_error('handshake_failed', str(e))  # Changed from error to log_error
             traceback.print_exc()
             return False
 
@@ -146,17 +184,20 @@ class Player:
             print(f"Player {self.name} is ready.")
             print("Available colors: RED, BLUE, GREEN, YELLOW, BLACK, WHITE")
             print("Enter your guess as comma-separated colors (e.g., red,blue,green,yellow,black)")
+            print("select only 5 colors from the available colors")
             
             while self.game_active:
                 try:
                     guess = input("Enter your guess (comma-separated colors): ")
                     if not self.send_guess(guess):
+                        print("\nGame ended.")
                         break
                 except KeyboardInterrupt:
                     print("\nGame terminated by user")
                     break
                 except Exception as e:
                     self.logger.log_error('gameplay_error', str(e))
+                    print(f"\nError during gameplay: {str(e)}")
                     break
         finally:
             self.client.close()
@@ -172,8 +213,7 @@ if __name__ == "__main__":
     print(f"\nConnecting to game server as {player_name}...")
     
     try:
-        ca = CertificationAuthority()
-        player = Player(player_name, ca)
+        player = Player(player_name)  # Remove CA parameter
         player.play()
     except ConnectionRefusedError:
         print("Could not connect to game server. Make sure the server is running.")

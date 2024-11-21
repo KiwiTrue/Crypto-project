@@ -2,23 +2,22 @@ import logging
 import sys
 from codemaster import Codemaster
 from player import Player
-from CA import CertificationAuthority
 from threading import Thread, Event
 from logger import SecurityLogger
 import signal
 import traceback
 from typing import List, Optional
 from time import sleep
+from secure_protocol import SecureProtocol  # Add this import
 
 class GameManager:
     def __init__(self):
         self.logger = configure_logging()
         self.shutdown_event = Event()
-        self.ca: Optional[CertificationAuthority] = None
         self.codemaster_thread: Optional[Thread] = None
         self.player_threads: List[Thread] = []
         self.colors = ["Red", "Blue", "Green", "Yellow", "Black", "White"]
-        self.server_ready = Event()  # Add this
+        self.server_ready = Event()
         self.player_count = 0
 
     def signal_handler(self, signum, frame):
@@ -28,20 +27,20 @@ class GameManager:
 
     def initialize_security(self):
         try:
-            self.ca = CertificationAuthority()
-            self.logger.log_security_event('ca_init', 'Certification Authority initialized')
+            # Initialize secure protocol components if needed
+            self.logger.log_security_event('security_init', 'Security components initialized')
         except Exception as e:
-            self.logger.log_error('ca_init_failed', str(e))
+            self.logger.log_error('security_init_failed', str(e))
             raise
 
     def start_codemaster(self):
         try:
-            codemaster = Codemaster(self.ca)
+            codemaster = Codemaster()  # Remove CA parameter
             codemaster.generate_sequence(self.colors)
             print("\nCodemaster initialized and waiting for players...")
+            print(f"\nSecret color sequence: {', '.join(codemaster.sequence)}")  # Added this line
             print("Players can now connect using: python player.py <player_name>\n")
             self.logger.log_security_event('codemaster_init', 'Codemaster initialized with sequence')
-            # Signal that server is ready for connections
             self.server_ready.set()
             codemaster.run()
         except Exception as e:
@@ -51,12 +50,10 @@ class GameManager:
 
     def start_player(self, name: str):
         try:
-            # Wait for server to be ready
             if not self.server_ready.wait(timeout=5):
                 raise TimeoutError("Server failed to start")
-            # Add small delay between player connections
             sleep(0.5)
-            player = Player(name, self.ca)
+            player = Player(name)  # Remove CA parameter
             self.logger.log_security_event('player_init', f'Player {name} initialized')
             player.play()
         except Exception as e:

@@ -1,3 +1,6 @@
+"""
+Session module - Handles secure game sessions
+"""
 import os
 from datetime import datetime, timedelta
 from cryptography.hazmat.primitives import padding
@@ -5,9 +8,22 @@ from typing import Optional, List, Union
 import logging
 
 class GameSession:
+    """
+    GameSession class - Manages secure game sessions
+    
+    Attributes:
+        session_id (str): Unique session identifier
+        cipher_type (str): Selected encryption cipher
+        key (bytes): Current session key
+        is_valid (bool): Session validity flag
+    """
     def __init__(self, session_id: str, cipher_type: str, 
                  rotation_interval: int = 15,
                  max_backup_keys: int = 3):
+        if rotation_interval < 1:
+            raise ValueError("Rotation interval must be at least 1 minute")
+        if max_backup_keys < 1:
+            raise ValueError("Must keep at least 1 backup key")
         self.session_id = session_id
         self.cipher_type = cipher_type
         self.key = os.urandom(32)
@@ -38,7 +54,7 @@ class GameSession:
             self.logger.info(f"Key rotated for session {self.session_id}")
             return self.key
         except Exception as e:
-            self.logger.error(f"Key rotation failed: {str(e)}")
+            self.logger.log_error(f"Key rotation failed: {str(e)}")
             raise
 
     def _add_backup_key(self, key: bytes) -> None:
