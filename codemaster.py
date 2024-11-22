@@ -200,7 +200,7 @@ class Codemaster:
         try:
             # Check if game is ready
             if len(self.players) < 2:
-                conn.send(json.dumps({'game_not_ready': True}).encode())
+                conn.send(json.dumps({'feedback': "Waiting for players"}).encode())
                 return "Waiting for players"
                 
             # Receive and decrypt guess
@@ -229,7 +229,9 @@ class Codemaster:
                 guess_colors = [c.strip().upper() for c in guess.split(',')]
                 
                 if not self.validate_guess(guess_colors):
-                    return "Invalid guess - use valid colors"
+                    feedback = "Invalid guess - use valid colors"
+                    conn.send(json.dumps({'feedback': feedback}).encode())
+                    return feedback
                     
                 feedback = self.check_guess(guess)
                 

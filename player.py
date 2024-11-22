@@ -40,6 +40,7 @@ class Player:
         self.logger = SecurityLogger(f'player_{name}')
         self.session: Optional[GameSession] = None
         self.on_message = lambda x: print(f"Server: {x}")  # Add callback
+        self.colors = ["RED", "BLUE", "GREEN", "YELLOW", "BLACK", "WHITE"]
 
     def handle_key_rotation(self, encrypted_key_data: dict) -> bool:
         try:
@@ -65,12 +66,19 @@ class Player:
         try:
             data = json.loads(response)
             if 'game_not_ready' in data:
-                print("\nWaiting for other players to connect...")
+                print("\nWaiting for other players to connect... (Press Enter to try again)")
                 return True
             elif 'key_rotation' in data:
                 return self.handle_key_rotation(data['key_rotation'])
             elif 'feedback' in data:
+                if isinstance(data['feedback'], str):
+                    self.on_message(data['feedback'])
+                    return True
+                    
                 encrypted_feedback = data['feedback']
+                if not isinstance(encrypted_feedback, dict):
+                    raise ValueError("Invalid feedback format")
+                    
                 # Ensure proper message format
                 if not all(k in encrypted_feedback for k in ['cipher', 'data', 'mac']):
                     raise ValueError("Invalid feedback format")
@@ -96,6 +104,10 @@ class Player:
 
     def send_guess(self, guess: str) -> bool:
         try:
+            if not guess or not all(c.strip().upper() in self.colors for c in guess.split(',')):
+                print("Invalid guess - use valid colors from: RED, BLUE, GREEN, YELLOW, BLACK, WHITE")
+                return True
+                
             if self.secure_channel:
                 # Normalize guess format
                 normalized_guess = ','.join(
