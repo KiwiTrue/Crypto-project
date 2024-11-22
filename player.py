@@ -71,11 +71,19 @@ class Player:
                 return self.handle_key_rotation(data['key_rotation'])
             elif 'feedback' in data:
                 encrypted_feedback = data['feedback']
+                # Ensure proper message format
+                if not all(k in encrypted_feedback for k in ['cipher', 'data', 'mac']):
+                    raise ValueError("Invalid feedback format")
+                    
                 if isinstance(encrypted_feedback.get('data'), str):
                     encrypted_feedback['data'] = base64.b64decode(encrypted_feedback['data'])
                 if isinstance(encrypted_feedback.get('mac'), str):
                     encrypted_feedback['mac'] = base64.b64decode(encrypted_feedback['mac'])
+                    
                 feedback = self.secure_channel.decrypt(encrypted_feedback)
+                if isinstance(feedback, bytes):
+                    feedback = feedback.decode()
+                    
                 self.on_message(feedback)
                 return "WIN" not in feedback
             return True
@@ -95,8 +103,13 @@ class Player:
                     for color in guess.split(',')
                 )
                 
-                # Encrypt the message
-                encrypted_msg = self.secure_channel.encrypt(normalized_guess)
+                # Create properly formatted secure message
+                message = normalized_guess.encode() if isinstance(normalized_guess, str) else normalized_guess
+                encrypted_msg = self.secure_channel.encrypt(message)
+                
+                # Ensure the encrypted message has all required fields
+                if not all(k in encrypted_msg for k in ['cipher', 'data', 'mac']):
+                    raise ValueError("Invalid message format")
                 
                 # Convert bytes to base64 for JSON serialization
                 if isinstance(encrypted_msg.get('data'), bytes):
@@ -104,7 +117,7 @@ class Player:
                 if isinstance(encrypted_msg.get('mac'), bytes):
                     encrypted_msg['mac'] = base64.b64encode(encrypted_msg['mac']).decode('utf-8')
                 
-                # Send JSON serializable message
+                # Send single JSON message
                 self.client.send(json.dumps(encrypted_msg).encode())
                 
                 # Handle response
