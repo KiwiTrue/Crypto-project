@@ -86,6 +86,62 @@ class Codemaster:
             if conn in self.players:
                 self.players.remove(conn)
 
+    def setup_secure_connection(self, conn: socket.socket, player_id: int) -> None:
+        """Setup secure connection with a player"""
+        try:
+            # Basic handshake
+            client_public_key = serialization.load_pem_public_key(conn.recv(4096))
+            conn.send(SecureProtocol.export_public_key(self.public_key))
+            
+            # Setup secure channel
+            session_key = SecureProtocol.generate_session_key()
+            encrypted_key = client_public_key.encrypt(session_key, padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            ))
+            conn.send(encrypted_key)
+            
+            # Create secure channel
+            self.secure_channels[player_id] = SecureMessage(SecureProtocol.CIPHER_TYPE, session_key)
+            
+        except Exception as e:
+            print(f"Error setting up secure connection: {e}")
+            raise
+
+    def receive_guess(self, conn: socket.socket, player_id: int) -> Optional[List[str]]:
+        """Receive and decrypt player's guess"""
+        try:
+            encrypted_data = json.loads(conn.recv(1024).decode())
+            guess = self.secure_channels[player_id].decrypt(encrypted_data)
+            return [c.strip().upper() for c in guess.split(',')]
+        except Exception as e:
+            print(f"Error receiving guess: {e}")
+            return None
+
+    def send_feedback(self, conn: socket.socket, player_id: int, feedback: str) -> None:
+        """Encrypt and send feedback to player"""
+        try:
+            encrypted_feedback = self.secure_channels[player_id].encrypt(feedback)
+            conn.send(json.dumps(encrypted_feedback).encode())
+        except Exception as e:
+            print(f"Error sending feedback: {e}")
+
+    def broadcast_winner(self, winner_id: int) -> None:
+        """Broadcast winner announcement to all players"""
+        message = {
+            'game_over': True,
+            'winner': winner_id,
+            'sequence': self.sequence
+        }
+        for player_id, player_conn in enumerate(self.players):
+            try:
+                if player_conn:
+                    encrypted_msg = self.secure_channels[player_id].encrypt(json.dumps(message))
+                    player_conn.send(json.dumps(encrypted_msg).encode())
+            except Exception as e:
+                print(f"Error broadcasting to player {player_id}: {e}")
+
     def run(self):
         print("\nWaiting for players...")
         while len(self.players) < 2:
