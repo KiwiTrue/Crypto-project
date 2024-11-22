@@ -55,7 +55,7 @@ class SecureProtocol:
 
     @staticmethod
     def generate_session_key() -> bytes:
-        return os.urandom(SecureProtocol.KEY_SIZE)
+        return os.urandom(32)  # 256-bit key for AES
 
     @staticmethod
     def create_secure_message(data: Union[str, bytes], cipher_type: str) -> Dict:

@@ -24,90 +24,65 @@ class Codemaster:
         self.server.bind((host, port))
         self.server.listen(2)
         
-        # Basic game state
+        # Game state
         self.colors = ["RED", "BLUE", "GREEN", "YELLOW", "BLACK", "WHITE"]
-        self.sequence = random.sample(self.colors, 5)
+        self.sequence = self.generate_sequence()
         self.players = []
         self.current_turn = 0
         self.game_over = False
         
-        # Security
+        # Security setup (simplified)
         self.private_key, self.public_key = SecureProtocol.generate_keypair("codemaster")
         self.secure_channels = {}
         
-        print(f"Secret sequence: {self.sequence}")  # For debugging
+        print(f"Secret sequence: {self.sequence}")
 
-    def handle_player(self, conn: socket.socket, player_id: int) -> None:
+    def generate_sequence(self, length=5):
+        """Task 3.1: Generate random color sequence"""
+        return random.choices(self.colors, k=length)
+
+    def check_guess(self, guess: list) -> str:
+        """Task 3.2: Compare guess with sequence and provide feedback"""
+        if len(guess) != len(self.sequence):
+            return "Invalid guess length"
+            
+        exact = sum(1 for g, s in zip(guess, self.sequence) if g == s)
+        # Count color matches (right color, wrong position)
+        color_matches = sum(min(guess.count(c), self.sequence.count(c)) for c in set(guess)) - exact
+        
+        return "WIN" if exact == len(self.sequence) else f"{exact} exact, {color_matches} color matches"
+
+    def handle_player(self, conn: socket.socket, player_id: int):
         try:
-            # Basic handshake
-            client_public_key = serialization.load_pem_public_key(conn.recv(4096))
-            conn.send(self.public_key.public_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PublicFormat.SubjectPublicKeyInfo
-            ))
-            
             # Setup secure channel
-            session_key = SecureProtocol.generate_session_key()
-            encrypted_key = client_public_key.encrypt(session_key, padding.OAEP(
-                mgf=padding.MGF1(algorithm=hashes.SHA256()),
-                algorithm=hashes.SHA256(),
-                label=None
-            ))
-            conn.send(encrypted_key)
+            self.setup_secure_connection(conn, player_id)
             
-            self.secure_channels[player_id] = SecureMessage(SecureProtocol.CIPHER_TYPE, session_key)
-            
-            # Game loop
             while not self.game_over:
                 if player_id != self.current_turn:
                     continue
-                    
-                # Handle guess
+                
+                # Process guess
                 guess = self.receive_guess(conn, player_id)
                 if not guess:
                     break
-                    
+                
+                # Send feedback
                 feedback = self.check_guess(guess)
                 self.send_feedback(conn, player_id, feedback)
                 
                 if feedback == "WIN":
-                    self.game_over = True
-                else:
-                    self.current_turn = (self.current_turn + 1) % len(self.players)
-                    
-        except Exception as e:
-            print(f"Player {player_id} error: {e}")
+                    self.broadcast_winner(player_id)
+                    break
+                
+                self.current_turn = (self.current_turn + 1) % len(self.players)
+                
         finally:
             if conn in self.players:
                 self.players.remove(conn)
 
-    def receive_guess(self, conn: socket.socket, player_id: int) -> Optional[List[str]]:
-        try:
-            encrypted_data = json.loads(conn.recv(1024).decode())
-            guess = self.secure_channels[player_id].decrypt(encrypted_data)
-            return [c.strip().upper() for c in guess.split(',')]
-        except:
-            return None
-
-    def send_feedback(self, conn: socket.socket, player_id: int, feedback: str) -> None:
-        try:
-            encrypted_feedback = self.secure_channels[player_id].encrypt(feedback)
-            conn.send(json.dumps(encrypted_feedback).encode())
-        except:
-            pass
-
-    def check_guess(self, guess: List[str]) -> str:
-        if len(guess) != len(self.sequence):
-            return "Invalid guess length"
-            
-        exact = sum(1 for i in range(len(self.sequence)) if guess[i] == self.sequence[i])
-        colors = sum(1 for g in guess if g in self.sequence) - exact
-        
-        return "WIN" if exact == len(self.sequence) else f"{exact} exact, {colors} color matches"
-
     def run(self):
         print("\nWaiting for players...")
         while len(self.players) < 2:
-            conn, addr = self.server.accept()
+            conn, _ = self.server.accept()
             self.players.append(conn)
             Thread(target=self.handle_player, args=(conn, len(self.players)-1)).start()

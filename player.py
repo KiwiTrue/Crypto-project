@@ -32,6 +32,14 @@ class Player:
         self.private_key, self.public_key = SecureProtocol.generate_keypair(f"player_{name}")
         self.secure_channel = None
         self.game_active = True
+        self.colors = ["RED", "BLUE", "GREEN", "YELLOW", "BLACK", "WHITE"]
+
+    def validate_guess(self, guess: str) -> list:
+        """Validate and format guess"""
+        colors = [c.strip().upper() for c in guess.split(',')]
+        if len(colors) != 5 or not all(c in self.colors for c in colors):
+            return None
+        return colors
 
     def connect(self, host='localhost', port=12345):
         self.client.connect((host, port))
@@ -55,16 +63,21 @@ class Player:
         
         self.secure_channel = SecureMessage(SecureProtocol.CIPHER_TYPE, session_key)
 
-    def send_guess(self, guess: str) -> bool:
+    def send_guess(self, colors: list) -> bool:
+        """Send guess and receive feedback"""
         try:
-            encrypted_guess = self.secure_channel.encrypt(guess)
-            self.client.send(json.dumps(encrypted_guess).encode())
+            # Send encrypted guess
+            message = ','.join(colors)
+            encrypted = self.secure_channel.encrypt(message)
+            self.client.send(json.dumps(encrypted).encode())
             
-            response = json.loads(self.client.recv(1024).decode())
-            feedback = self.secure_channel.decrypt(response)
+            # Get feedback
+            response = self.secure_channel.decrypt(
+                json.loads(self.client.recv(1024).decode())
+            )
             
-            print(f"Server: {feedback}")
-            return "WIN" not in feedback
+            print(f"Feedback: {response}")
+            return "WIN" not in response
             
         except Exception as e:
             print(f"Error: {e}")
@@ -72,16 +85,21 @@ class Player:
 
     def play(self):
         try:
+            # Connect and setup secure channel
             self.connect()
-            print("\nConnected to game server")
-            print("Available colors: RED, BLUE, GREEN, YELLOW, BLACK, WHITE")
-            print("Enter 5 comma-separated colors")
+            print(f"\nPlayer {self.name} connected to game")
+            print("Colors:", ", ".join(self.colors))
+            print("Enter 5 comma-separated colors (e.g., RED,BLUE,GREEN,YELLOW,BLACK)")
             
             while self.game_active:
                 guess = input("\nYour guess: ")
-                if not self.send_guess(guess):
+                colors = self.validate_guess(guess)
+                if not colors:
+                    print("Invalid guess! Use 5 valid colors.")
+                    continue
+                
+                if not self.send_guess(colors):
                     break
-                    
         finally:
             self.client.close()
 
