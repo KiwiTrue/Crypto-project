@@ -12,6 +12,7 @@ import json
 import os
 import base64
 import random
+from datetime import datetime
 
 """
 Codemaster module - Implements the game server and game logic
@@ -32,12 +33,17 @@ class Codemaster:
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.bind((host, port))
         self.server.listen(2)
+        self.server.settimeout(90)  # 1.30 minutes timeout for accepting connections
+        self.connection_timeouts = {}
         # Basic setup
         self.sequence = []
         self.players = []
         self.current_turn = 0
         self.player_count = 0
         self.game_over = False
+        self.colors = ["RED", "BLUE", "GREEN", "YELLOW", "BLACK", "WHITE"]
+        self.total_players = 2
+        self.current_player = 0
         
         # Thread safety
         self.turn_lock = Lock()
@@ -66,10 +72,20 @@ class Codemaster:
                     self.logger.log_error('broadcast_failed', str(e))
 
     def generate_sequence(self, colors, length=5):
+        """Generate a random sequence of exactly 5 colors"""
+        if len(colors) < 5:
+            raise ValueError("Must have at least 5 colors available")
         # Normalize colors to uppercase
         normalized_colors = [color.upper() for color in colors]
-        # Use random.sample to ensure no repeats
+        # Use random.sample to ensure exactly 5 colors
         self.sequence = random.sample(normalized_colors, length)
+        return self.sequence
+
+    def validate_guess(self, guess_colors: List[str]) -> bool:
+        """Validate a player's guess"""
+        if len(guess_colors) != len(self.sequence):
+            return False
+        return all(color.upper() in [c.upper() for c in self.colors] for color in guess_colors)
 
     def setup_secure_channel(self, conn: socket.socket, player_id: int, player_public_key: rsa.RSAPublicKey) -> dict:
         try:
@@ -99,6 +115,10 @@ class Codemaster:
             raise
 
     def handle_player(self, conn: socket.socket, addr: Tuple[str, int]) -> None:
+        # Set per-client timeout
+        conn.settimeout(30)  # 30 second timeout for client operations
+        self.connection_timeouts[conn] = datetime.now()
+        
         try:
             player_id = self.player_count
             self.player_count += 1
@@ -139,6 +159,8 @@ class Codemaster:
                 print(f"Hidden sequence has {len(self.sequence)} colors")
             
             while not self.game_over:
+                if (datetime.now() - self.connection_timeouts[conn]).seconds > 300:  # 5 minute total timeout
+                    raise TimeoutError("Player session expired")
                 try:
                     with self.turn_lock:
                         if player_id != self.current_turn:
@@ -164,6 +186,8 @@ class Codemaster:
                     self.logger.log_error('turn_processing_error', str(e))
                     break
                     
+        except TimeoutError as te:
+            self.logger.log_error('timeout_error', str(te))
         except ConnectionResetError:
             self.logger.log_error('connection_reset', f'Connection reset by {addr}')
         except Exception as e:
@@ -181,29 +205,28 @@ class Codemaster:
                 
             encrypted_guess = json.loads(encrypted_data)
             if 'data' in encrypted_guess:
-                # Convert base64 back to bytes
                 encrypted_guess['data'] = base64.b64decode(encrypted_guess['data'])
             if 'mac' in encrypted_guess:
                 encrypted_guess['mac'] = base64.b64decode(encrypted_guess['mac'])
                 
-            # Get the decrypted guess and handle both string and bytes types
+            # Decrypt and validate guess
             guess = self.secure_channels[player_id].decrypt(encrypted_guess)
             guess_str = guess if isinstance(guess, str) else guess.decode()
+            guess_colors = [c.strip().upper() for c in guess_str.split(',')]
+            
+            if not self.validate_guess(guess_colors):
+                return "Invalid guess - use valid colors"
+                
             feedback = self.check_guess(guess_str.strip())
             
-            # Pad feedback before encryption
-            feedback_padded = GameSession.pad_data(feedback.encode())
-            secure_msg = self.secure_channels[player_id].encrypt(feedback_padded)
+            # Encrypt feedback
+            secure_msg = self.secure_channels[player_id].encrypt(feedback)
             
             if isinstance(secure_msg.get('data'), bytes):
                 secure_msg['data'] = base64.b64encode(secure_msg['data']).decode('utf-8')
             if isinstance(secure_msg.get('mac'), bytes):
                 secure_msg['mac'] = base64.b64encode(secure_msg['mac']).decode('utf-8')
                 
-            # Send response back to the player
-            response = json.dumps({'feedback': secure_msg})
-            conn.send(response.encode())
-            
             return feedback
             
         except Exception as e:
@@ -332,7 +355,7 @@ class Codemaster:
                 )
             )
             
-            # Convert bytes to base64 before sending
+            # Send encrypted key
             conn.send(json.dumps({
                 'cipher': cipher_type,
                 'key': base64.b64encode(encrypted_key).decode('utf-8')
@@ -343,6 +366,8 @@ class Codemaster:
             return True
             
         except Exception as e:
-            self.logger.log_error('handshake_failed', str(e))  # Changed from error to log_error
+            self.logger.log_error('handshake_failed', str(e))
             traceback.print_exc()
             return False
+
+    # ...rest of existing code remains unchanged...
