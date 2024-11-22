@@ -69,18 +69,33 @@ class Player:
             # Send encrypted guess
             message = ','.join(colors)
             encrypted = self.secure_channel.encrypt(message)
+            
+            # Convert bytes to base64 for JSON serialization
+            if isinstance(encrypted.get('data'), bytes):
+                encrypted['data'] = base64.b64encode(encrypted['data']).decode('utf-8')
+            if isinstance(encrypted.get('mac'), bytes):
+                encrypted['mac'] = base64.b64encode(encrypted['mac']).decode('utf-8')
+            
+            # Send JSON-serializable message
             self.client.send(json.dumps(encrypted).encode())
             
-            # Get feedback
-            response = self.secure_channel.decrypt(
-                json.loads(self.client.recv(1024).decode())
-            )
+            # Receive and process response
+            response_data = self.client.recv(1024).decode()
+            response = json.loads(response_data)
             
-            print(f"Feedback: {response}")
-            return "WIN" not in response
+            # Convert base64 back to bytes for decryption
+            if isinstance(response.get('data'), str):
+                response['data'] = base64.b64decode(response['data'])
+            if isinstance(response.get('mac'), str):
+                response['mac'] = base64.b64decode(response['mac'])
+                
+            feedback = self.secure_channel.decrypt(response)
+            print(f"Feedback: {feedback}")
+            return "WIN" not in feedback
             
         except Exception as e:
             print(f"Error: {e}")
+            traceback.print_exc()
             return False
 
     def play(self):

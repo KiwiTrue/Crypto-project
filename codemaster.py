@@ -112,9 +112,21 @@ class Codemaster:
     def receive_guess(self, conn: socket.socket, player_id: int) -> Optional[List[str]]:
         """Receive and decrypt player's guess"""
         try:
-            encrypted_data = json.loads(conn.recv(1024).decode())
+            data = conn.recv(1024).decode()
+            if not data:
+                return None
+                
+            encrypted_data = json.loads(data)
+            
+            # Convert base64 back to bytes for decryption
+            if isinstance(encrypted_data.get('data'), str):
+                encrypted_data['data'] = base64.b64decode(encrypted_data['data'])
+            if isinstance(encrypted_data.get('mac'), str):
+                encrypted_data['mac'] = base64.b64decode(encrypted_data['mac'])
+            
             guess = self.secure_channels[player_id].decrypt(encrypted_data)
             return [c.strip().upper() for c in guess.split(',')]
+            
         except Exception as e:
             print(f"Error receiving guess: {e}")
             return None
@@ -123,7 +135,15 @@ class Codemaster:
         """Encrypt and send feedback to player"""
         try:
             encrypted_feedback = self.secure_channels[player_id].encrypt(feedback)
+            
+            # Convert bytes to base64 for JSON serialization
+            if isinstance(encrypted_feedback.get('data'), bytes):
+                encrypted_feedback['data'] = base64.b64encode(encrypted_feedback['data']).decode('utf-8')
+            if isinstance(encrypted_feedback.get('mac'), bytes):
+                encrypted_feedback['mac'] = base64.b64encode(encrypted_feedback['mac']).decode('utf-8')
+            
             conn.send(json.dumps(encrypted_feedback).encode())
+            
         except Exception as e:
             print(f"Error sending feedback: {e}")
 
