@@ -198,12 +198,23 @@ class Codemaster:
 
     def process_player_turn(self, conn: socket.socket, player_id: int) -> str:
         try:
+            # Check if game is ready
+            if len(self.players) < 2:
+                conn.send(json.dumps({'game_not_ready': True}).encode())
+                return "Waiting for players"
+                
             # Receive and decrypt guess
             encrypted_data = conn.recv(1024).decode()
             if not encrypted_data:
                 return "Invalid guess"
                 
             encrypted_guess = json.loads(encrypted_data)
+            
+            # Convert base64 back to bytes
+            if isinstance(encrypted_guess.get('data'), str):
+                encrypted_guess['data'] = base64.b64decode(encrypted_guess['data'])
+            if isinstance(encrypted_guess.get('mac'), str):
+                encrypted_guess['mac'] = base64.b64decode(encrypted_guess['mac'])
             
             # Decrypt and validate guess
             guess = self.secure_channels[player_id].decrypt(encrypted_guess)
@@ -215,21 +226,19 @@ class Codemaster:
                 
             feedback = self.check_guess(guess_str.strip())
             
-            # Create response with properly formatted secure message
-            response = {
-                'feedback': {
-                    'cipher': self.secure_channels[player_id].cipher_type,
-                    'data': feedback,
-                    'mac': None  # Will be added by encrypt method
-                }
-            }
-            
-            # Encrypt the feedback
+            # Encrypt and prepare response
             encrypted_feedback = self.secure_channels[player_id].encrypt(feedback)
-            response['feedback'] = encrypted_feedback
+            
+            # Convert bytes to base64 for JSON serialization
+            if isinstance(encrypted_feedback.get('data'), bytes):
+                encrypted_feedback['data'] = base64.b64encode(encrypted_feedback['data']).decode('utf-8')
+            if isinstance(encrypted_feedback.get('mac'), bytes):
+                encrypted_feedback['mac'] = base64.b64encode(encrypted_feedback['mac']).decode('utf-8')
             
             # Send response
+            response = {'feedback': encrypted_feedback}
             conn.send(json.dumps(response).encode())
+            
             return feedback
             
         except Exception as e:
