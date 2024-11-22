@@ -124,11 +124,16 @@ class Codemaster:
             if isinstance(encrypted_data.get('mac'), str):
                 encrypted_data['mac'] = base64.b64decode(encrypted_data['mac'])
             
+            # Decrypt and unpad guess
             guess = self.secure_channels[player_id].decrypt(encrypted_data)
+            if isinstance(guess, bytes):
+                guess = SecureProtocol.unpad_message(guess)
+            
             return [c.strip().upper() for c in guess.split(',')]
             
         except Exception as e:
             print(f"Error receiving guess: {e}")
+            traceback.print_exc()
             return None
 
     def send_feedback(self, conn: socket.socket, player_id: int, feedback: str) -> None:

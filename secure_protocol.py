@@ -65,3 +65,19 @@ class SecureProtocol:
             'data': data,
             'mac': None  # Will be added during encryption
         }
+
+    @staticmethod
+    def pad_message(message: str) -> bytes:
+        """Pad message to block size"""
+        if isinstance(message, str):
+            message = message.encode()
+        from cryptography.hazmat.primitives import padding
+        padder = padding.PKCS7(128).padder()
+        return padder.update(message) + padder.finalize()
+
+    @staticmethod
+    def unpad_message(padded_data: bytes) -> str:
+        """Remove padding and return string"""
+        from cryptography.hazmat.primitives import padding
+        unpadder = padding.PKCS7(128).unpadder()
+        return (unpadder.update(padded_data) + unpadder.finalize()).decode()

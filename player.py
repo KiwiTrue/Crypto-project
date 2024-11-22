@@ -66,9 +66,12 @@ class Player:
     def send_guess(self, colors: list) -> bool:
         """Send guess and receive feedback"""
         try:
-            # Send encrypted guess
+            # Create and pad message
             message = ','.join(colors)
-            encrypted = self.secure_channel.encrypt(message)
+            padded_message = SecureProtocol.pad_message(message)
+            
+            # Encrypt padded message
+            encrypted = self.secure_channel.encrypt(padded_message)
             
             # Convert bytes to base64 for JSON serialization
             if isinstance(encrypted.get('data'), bytes):
@@ -79,7 +82,7 @@ class Player:
             # Send JSON-serializable message
             self.client.send(json.dumps(encrypted).encode())
             
-            # Receive and process response
+            # Handle response
             response_data = self.client.recv(1024).decode()
             response = json.loads(response_data)
             
@@ -89,7 +92,11 @@ class Player:
             if isinstance(response.get('mac'), str):
                 response['mac'] = base64.b64decode(response['mac'])
                 
+            # Decrypt and unpad feedback
             feedback = self.secure_channel.decrypt(response)
+            if isinstance(feedback, bytes):
+                feedback = SecureProtocol.unpad_message(feedback)
+            
             print(f"Feedback: {feedback}")
             return "WIN" not in feedback
             
