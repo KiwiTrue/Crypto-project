@@ -9,24 +9,15 @@ import json
 import base64
 
 class SecureProtocol:
-    SUPPORTED_CIPHERS = ['AES', 'BLOWFISH', 'DES']
+    CIPHER_TYPE = 'AES'  # Simplify to use single cipher type
+    KEY_SIZE = 32  # 256-bit AES key
     
     @staticmethod
-    def generate_keypair(save_path: str) -> Tuple[rsa.RSAPrivateKey, rsa.RSAPublicKey]:
-        """Generate and save keypair"""
+    def generate_keypair(name: str) -> Tuple[rsa.RSAPrivateKey, rsa.RSAPublicKey]:
         private_key = rsa.generate_private_key(
             public_exponent=65537,
             key_size=2048
         )
-        
-        # Save private key
-        with open(f"{save_path}.pem", "wb") as f:
-            f.write(private_key.private_bytes(
-                encoding=serialization.Encoding.PEM,
-                format=serialization.PrivateFormat.PKCS8,
-                encryption_algorithm=serialization.NoEncryption()
-            ))
-        
         return private_key, private_key.public_key()
     
     @staticmethod
@@ -63,10 +54,8 @@ class SecureProtocol:
         return session_id, key
 
     @staticmethod
-    def generate_session_key(cipher_type: str) -> bytes:
-        """Generate appropriate key for chosen cipher"""
-        key_sizes = {'AES': 32, 'BLOWFISH': 32, 'DES': 8}
-        return os.urandom(key_sizes[cipher_type])
+    def generate_session_key() -> bytes:
+        return os.urandom(SecureProtocol.KEY_SIZE)
 
     @staticmethod
     def create_secure_message(data: Union[str, bytes], cipher_type: str) -> Dict:
