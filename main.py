@@ -16,7 +16,7 @@ class GameManager:
         self.shutdown_event = Event()
         self.codemaster_thread: Optional[Thread] = None
         self.player_threads: List[Thread] = []
-        self.colors = ["Red", "Blue", "Green", "Yellow", "Black", "White"]
+        self.colors = ["RED", "BLUE", "GREEN", "YELLOW", "BLACK", "WHITE"]
         self.server_ready = Event()
         self.player_count = 0
 
@@ -35,10 +35,9 @@ class GameManager:
 
     def start_codemaster(self):
         try:
-            codemaster = Codemaster()  # Remove CA parameter
-            codemaster.generate_sequence(self.colors)
+            codemaster = Codemaster()
             print("\nCodemaster initialized and waiting for players...")
-            print(f"\nSecret color sequence: {', '.join(codemaster.sequence)}")  # Added this line
+            print(f"Secret color sequence: {', '.join(codemaster.sequence)}")
             print("Players can now connect using: python player.py <player_name>\n")
             self.logger.log_security_event('codemaster_init', 'Codemaster initialized with sequence')
             self.server_ready.set()

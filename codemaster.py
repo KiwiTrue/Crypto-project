@@ -26,10 +26,13 @@ class Codemaster:
         
         # Game state
         self.colors = ["RED", "BLUE", "GREEN", "YELLOW", "BLACK", "WHITE"]
-        self.sequence = self.generate_sequence()
+        self.sequence = []  # Initialize empty sequence
         self.players = []
         self.current_turn = 0
         self.game_over = False
+        
+        # Generate sequence after initialization
+        self.sequence = self.generate_sequence()
         
         # Security setup (simplified)
         self.private_key, self.public_key = SecureProtocol.generate_keypair("codemaster")
@@ -37,9 +40,12 @@ class Codemaster:
         
         print(f"Secret sequence: {self.sequence}")
 
-    def generate_sequence(self, length=5):
-        """Task 3.1: Generate random color sequence"""
-        return random.choices(self.colors, k=length)
+    def generate_sequence(self, length=5) -> List[str]:
+        """Generate random color sequence of specified length"""
+        if len(self.colors) < length:
+            raise ValueError(f"Need at least {length} colors")
+        # Use random.sample instead of choices to ensure unique colors
+        return random.sample(self.colors, length)
 
     def check_guess(self, guess: list) -> str:
         """Task 3.2: Compare guess with sequence and provide feedback"""
