@@ -66,37 +66,31 @@ class Player:
     def send_guess(self, colors: list) -> bool:
         """Send guess and receive feedback"""
         try:
-            # Create and pad message
+            # Create message
             message = ','.join(colors)
-            padded_message = SecureProtocol.pad_message(message)
             
-            # Encrypt padded message
-            encrypted = self.secure_channel.encrypt(padded_message)
+            # Encrypt message
+            encrypted = self.secure_channel.encrypt(message)
             
-            # Convert bytes to base64 for JSON serialization
-            if isinstance(encrypted.get('data'), bytes):
-                encrypted['data'] = base64.b64encode(encrypted['data']).decode('utf-8')
-            if isinstance(encrypted.get('mac'), bytes):
-                encrypted['mac'] = base64.b64encode(encrypted['mac']).decode('utf-8')
+            # Convert bytes data to base64 for JSON
+            encrypted['data'] = base64.b64encode(encrypted['data']).decode('utf-8')
+            encrypted['mac'] = base64.b64encode(encrypted['mac']).decode('utf-8')
+            encrypted['iv'] = base64.b64encode(encrypted['iv']).decode('utf-8')
             
-            # Send JSON-serializable message
+            # Send encrypted message
             self.client.send(json.dumps(encrypted).encode())
             
-            # Handle response
+            # Receive and process response
             response_data = self.client.recv(1024).decode()
             response = json.loads(response_data)
             
-            # Convert base64 back to bytes for decryption
-            if isinstance(response.get('data'), str):
-                response['data'] = base64.b64decode(response['data'])
-            if isinstance(response.get('mac'), str):
-                response['mac'] = base64.b64decode(response['mac'])
-                
-            # Decrypt and unpad feedback
-            feedback = self.secure_channel.decrypt(response)
-            if isinstance(feedback, bytes):
-                feedback = SecureProtocol.unpad_message(feedback)
+            # Convert base64 back to bytes
+            response['data'] = base64.b64decode(response['data'])
+            response['mac'] = base64.b64decode(response['mac'])
+            response['iv'] = base64.b64decode(response['iv'])
             
+            # Decrypt response
+            feedback = self.secure_channel.decrypt(response)
             print(f"Feedback: {feedback}")
             return "WIN" not in feedback
             

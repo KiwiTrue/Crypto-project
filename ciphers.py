@@ -320,70 +320,101 @@ class SecureMessage:
 
     def encrypt(self, message: Union[str, bytes]) -> dict:
         try:
-            encryption_methods = {
-                'CAESAR': lambda m: self.SUPPORTED_CIPHERS[self.cipher_type][0](m, int.from_bytes(self.key[:1], 'big')),
-                'MONOALPHABETIC': lambda m: self.SUPPORTED_CIPHERS[self.cipher_type][0](m, self.key),
-                'PLAYFAIR': lambda m: self.SUPPORTED_CIPHERS[self.cipher_type][0](m, self.key),
-                'VIGENERE': lambda m: self.SUPPORTED_CIPHERS[self.cipher_type][0](m, self.key),
-                'DES': lambda m: self.SUPPORTED_CIPHERS[self.cipher_type][0](m if isinstance(m, bytes) else m.encode(), self.key),
-                'AES': lambda m: self.SUPPORTED_CIPHERS[self.cipher_type][0](m if isinstance(m, bytes) else m.encode(), self.key),
-                'BLOWFISH': lambda m: self.SUPPORTED_CIPHERS[self.cipher_type][0](m if isinstance(m, bytes) else m.encode(), self.key),
-                'RC4': lambda m: self.SUPPORTED_CIPHERS[self.cipher_type][0](m if isinstance(m, bytes) else m.encode(), self.key)
-            }
+            # Ensure message is bytes and properly padded
+            if isinstance(message, str):
+                message = message.encode()
+                
+            # Apply PKCS7 padding
+            padder = padding.PKCS7(128).padder()
+            padded_data = padder.update(message) + padder.finalize()
             
-            encrypted = encryption_methods[self.cipher_type](message)
+            # Encrypt using selected cipher
+            if self.cipher_type == 'AES':
+                cipher = Cipher(algorithms.AES(self.key), modes.CBC(os.urandom(16)))
+                encryptor = cipher.encryptor()
+                encrypted = encryptor.update(padded_data) + encryptor.finalize()
+                
+                # Create secure message with IV
+                result = {
+                    'cipher': self.cipher_type,
+                    'data': encrypted,
+                    'iv': encryptor.nonce if hasattr(encryptor, 'nonce') else cipher.iv,
+                    'mac': None
+                }
+            else:
+                # Handle other cipher types
+                encryption_methods = {
+                    'CAESAR': lambda m: self.SUPPORTED_CIPHERS[self.cipher_type][0](m, int.from_bytes(self.key[:1], 'big')),
+                    'MONOALPHABETIC': lambda m: self.SUPPORTED_CIPHERS[self.cipher_type][0](m, self.key),
+                    'PLAYFAIR': lambda m: self.SUPPORTED_CIPHERS[self.cipher_type][0](m, self.key),
+                    'VIGENERE': lambda m: self.SUPPORTED_CIPHERS[self.cipher_type][0](m, self.key),
+                    'DES': lambda m: self.SUPPORTED_CIPHERS[self.cipher_type][0](m if isinstance(m, bytes) else m.encode(), self.key),
+                    'AES': lambda m: self.SUPPORTED_CIPHERS[self.cipher_type][0](m if isinstance(m, bytes) else m.encode(), self.key),
+                    'BLOWFISH': lambda m: self.SUPPORTED_CIPHERS[self.cipher_type][0](m if isinstance(m, bytes) else m.encode(), self.key),
+                    'RC4': lambda m: self.SUPPORTED_CIPHERS[self.cipher_type][0](m if isinstance(m, bytes) else m.encode(), self.key)
+                }
+                
+                encrypted = encryption_methods[self.cipher_type](message)
+                
+                result = {
+                    'cipher': self.cipher_type,
+                    'data': encrypted,
+                    'mac': None
+                }
+                
+            # Add MAC
+            h = hmac.HMAC(self.key, hashes.SHA256())
+            h.update(encrypted)
+            result['mac'] = h.finalize()
             
-            key_bytes = self.key if isinstance(self.key, bytes) else self.key.encode()
-            h = hmac.HMAC(key_bytes, hashes.SHA256())
-            h.update(encrypted if isinstance(encrypted, bytes) else encrypted.encode())
-            mac = h.finalize()
+            return result
             
-            return {
-                'cipher': self.cipher_type,
-                'data': encrypted,
-                'mac': mac
-            }
         except Exception as e:
             raise RuntimeError(f"Encryption failed: {str(e)}")
 
-    def decrypt(self, secure_message: dict) -> str:
+    def decrypt(self, secure_message: dict) -> Union[str, bytes]:
         try:
-            if not all(k in secure_message for k in ['cipher', 'data', 'mac']):
+            if not all(k in secure_message for k in ['cipher', 'data', 'mac', 'iv']):
                 raise ValueError("Invalid secure message format")
             
-            # Convert base64 encoded data back to bytes
-            if isinstance(secure_message['data'], str):
-                secure_message['data'] = base64.b64decode(secure_message['data'])
-            if isinstance(secure_message['mac'], str):
-                secure_message['mac'] = base64.b64decode(secure_message['mac'])
-                
-            # Verify HMAC
-            key_bytes = self.key if isinstance(self.key, bytes) else self.key.encode()
-            h = hmac.HMAC(key_bytes, hashes.SHA256())
+            # Verify MAC
+            h = hmac.HMAC(self.key, hashes.SHA256())
             h.update(secure_message['data'])
             try:
                 h.verify(secure_message['mac'])
             except Exception:
                 raise ValueError("Message authentication failed")
+            
+            # Decrypt using selected cipher
+            if self.cipher_type == 'AES':
+                cipher = Cipher(algorithms.AES(self.key), modes.CBC(secure_message['iv']))
+                decryptor = cipher.decryptor()
+                decrypted = decryptor.update(secure_message['data']) + decryptor.finalize()
                 
-            # Decrypt the data
-            decryption_methods = {
-                'CAESAR': lambda d: caesar_decrypt(d, int.from_bytes(self.key[:1], 'big')),
-                'MONOALPHABETIC': lambda d: monoalphabetic_decrypt(d, self.key),
-                'PLAYFAIR': lambda d: playfair_decrypt(d, self.key),
-                'VIGENERE': lambda d: vigenere_decrypt(d, self.key),
-                'DES': lambda d: des_decrypt(d, self.key),
-                'AES': lambda d: aes_decrypt(d, self.key),
-                'BLOWFISH': lambda d: blowfish_decrypt(d, self.key),
-                'RC4': lambda d: rc4_decrypt(d, self.key)
-            }
-            
-            decrypted = decryption_methods[secure_message['cipher']](secure_message['data'])
-            
-            # Handle bytes vs string output
-            if isinstance(decrypted, bytes):
-                return unpad_data(decrypted).decode()
-            return decrypted
+                # Remove padding
+                unpadder = padding.PKCS7(128).unpadder()
+                unpadded = unpadder.update(decrypted) + unpadder.finalize()
+                
+                return unpadded.decode()
+            else:
+                # Handle other cipher types
+                decryption_methods = {
+                    'CAESAR': lambda d: caesar_decrypt(d, int.from_bytes(self.key[:1], 'big')),
+                    'MONOALPHABETIC': lambda d: monoalphabetic_decrypt(d, self.key),
+                    'PLAYFAIR': lambda d: playfair_decrypt(d, self.key),
+                    'VIGENERE': lambda d: vigenere_decrypt(d, self.key),
+                    'DES': lambda d: des_decrypt(d, self.key),
+                    'AES': lambda d: aes_decrypt(d, self.key),
+                    'BLOWFISH': lambda d: blowfish_decrypt(d, self.key),
+                    'RC4': lambda d: rc4_decrypt(d, self.key)
+                }
+                
+                decrypted = decryption_methods[secure_message['cipher']](secure_message['data'])
+                
+                # Handle bytes vs string output
+                if isinstance(decrypted, bytes):
+                    return unpad_data(decrypted).decode()
+                return decrypted
             
         except Exception as e:
             raise RuntimeError(f"Decryption failed: {str(e)}")
