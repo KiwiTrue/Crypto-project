@@ -2,7 +2,7 @@
 Secure Protocol Handler - Implements secure key distribution and cipher negotiation
 """
 import os
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, List, Union
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import hashes, serialization
 import json
@@ -67,3 +67,12 @@ class SecureProtocol:
         """Generate appropriate key for chosen cipher"""
         key_sizes = {'AES': 32, 'BLOWFISH': 32, 'DES': 8}
         return os.urandom(key_sizes[cipher_type])
+
+    @staticmethod
+    def create_secure_message(data: Union[str, bytes], cipher_type: str) -> Dict:
+        """Create a properly formatted secure message"""
+        return {
+            'cipher': cipher_type,
+            'data': data,
+            'mac': None  # Will be added during encryption
+        }

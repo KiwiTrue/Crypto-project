@@ -204,11 +204,7 @@ class Codemaster:
                 return "Invalid guess"
                 
             encrypted_guess = json.loads(encrypted_data)
-            if 'data' in encrypted_guess:
-                encrypted_guess['data'] = base64.b64decode(encrypted_guess['data'])
-            if 'mac' in encrypted_guess:
-                encrypted_guess['mac'] = base64.b64decode(encrypted_guess['mac'])
-                
+            
             # Decrypt and validate guess
             guess = self.secure_channels[player_id].decrypt(encrypted_guess)
             guess_str = guess if isinstance(guess, str) else guess.decode()
@@ -219,14 +215,21 @@ class Codemaster:
                 
             feedback = self.check_guess(guess_str.strip())
             
-            # Encrypt feedback
-            secure_msg = self.secure_channels[player_id].encrypt(feedback)
+            # Create response with properly formatted secure message
+            response = {
+                'feedback': {
+                    'cipher': self.secure_channels[player_id].cipher_type,
+                    'data': feedback,
+                    'mac': None  # Will be added by encrypt method
+                }
+            }
             
-            if isinstance(secure_msg.get('data'), bytes):
-                secure_msg['data'] = base64.b64encode(secure_msg['data']).decode('utf-8')
-            if isinstance(secure_msg.get('mac'), bytes):
-                secure_msg['mac'] = base64.b64encode(secure_msg['mac']).decode('utf-8')
-                
+            # Encrypt the feedback
+            encrypted_feedback = self.secure_channels[player_id].encrypt(feedback)
+            response['feedback'] = encrypted_feedback
+            
+            # Send response
+            conn.send(json.dumps(response).encode())
             return feedback
             
         except Exception as e:

@@ -67,13 +67,20 @@ class Player:
             if 'key_rotation' in data:
                 return self.handle_key_rotation(data['key_rotation'])
             elif 'feedback' in data:
-                feedback = self.secure_channel.decrypt(data['feedback'])
-                self.on_message(feedback)  # Use callback instead of print
-                return "Game Over" not in feedback
+                encrypted_feedback = data['feedback']
+                # Ensure proper message format
+                if not all(k in encrypted_feedback for k in ['cipher', 'data', 'mac']):
+                    raise ValueError("Invalid feedback format")
+                feedback = self.secure_channel.decrypt(encrypted_feedback)
+                self.on_message(feedback)
+                return "WIN" not in feedback
             return True
         except json.JSONDecodeError:
             print(f"Server: {response}")
             return "Game Over" not in response
+        except Exception as e:
+            print(f"Error processing response: {str(e)}")
+            return False
 
     def send_guess(self, guess: str) -> bool:
         try:
@@ -83,28 +90,28 @@ class Player:
                     color.strip().upper() 
                     for color in guess.split(',')
                 )
-                # Pad and encrypt guess
-                padded_guess = GameSession.pad_data(normalized_guess.encode())
-                secure_msg = self.secure_channel.encrypt(padded_guess)
                 
-                # Convert bytes to base64 for JSON serialization
-                if isinstance(secure_msg.get('data'), bytes):
-                    secure_msg['data'] = base64.b64encode(secure_msg['data']).decode('utf-8')
-                if isinstance(secure_msg.get('mac'), bytes):
-                    secure_msg['mac'] = base64.b64encode(secure_msg['mac']).decode('utf-8')
+                # Create properly formatted secure message
+                secure_msg = {
+                    'cipher': self.secure_channel.cipher_type,
+                    'data': normalized_guess,
+                    'mac': None  # Will be added by encrypt method
+                }
                 
-                self.client.send(json.dumps(secure_msg).encode())
+                # Encrypt the message
+                encrypted_msg = self.secure_channel.encrypt(normalized_guess)
                 
-                # Add timeout handling
+                # Send encrypted message
+                self.client.send(json.dumps(encrypted_msg).encode())
+                
+                # Handle response
                 try:
                     response = self.client.recv(1024).decode()
                     return self.process_server_response(response)
                 except socket.timeout:
                     print("\nServer response timed out. The game might have ended.")
                     return False
-                except ConnectionError:
-                    print("\nLost connection to the server.")
-                    return False
+                
             else:
                 self.logger.log_error('secure_channel_missing', 'No secure channel established')
                 return False
