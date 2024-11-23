@@ -1,6 +1,5 @@
 ### [README.md](https://github.com/KiwiTrue/README.md)
 
-```markdown
 # 🎮 Secure Mastermind Game
 
 <div align="center">
