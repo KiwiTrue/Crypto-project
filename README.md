@@ -38,6 +38,10 @@ Watch here ⬇️⬇️
 
 ### Prerequisites
 ```bash
+git clone https://github.com/KiwiTrue/Crypto-project.git
+cd Crypto-project
+```
+```
 # Install required packages
 pip install cryptography numpy
 ```
