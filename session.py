@@ -4,8 +4,9 @@ Session module - Handles secure game sessions
 import os
 from datetime import datetime, timedelta
 from cryptography.hazmat.primitives import padding
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Tuple
 import logging
+import random
 
 class GameSession:
     """
@@ -77,6 +78,15 @@ class GameSession:
     def unpad_data(padded_data: bytes) -> bytes:
         unpadder = padding.PKCS7(128).unpadder()
         return unpadder.update(padded_data) + unpadder.finalize()
+
+    def generate_sequence(self, colors: List[str], length: int = 3) -> List[str]:
+        """Generate a random sequence of unique colors"""
+        return random.sample([c.upper() for c in colors], length)
+
+    def provide_feedback(self, sequence: List[str], guess: List[str]) -> Tuple[int, int]:
+        exact_matches = sum(1 for s, g in zip(sequence, guess) if s == g)
+        color_matches = sum(min(sequence.count(color), guess.count(color)) for color in set(guess)) - exact_matches
+        return exact_matches, color_matches
 
     def __str__(self) -> str:
         return f"GameSession(id={self.session_id}, created={self.created_at}, valid={self.is_valid})"

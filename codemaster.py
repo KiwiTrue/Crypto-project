@@ -1,4 +1,5 @@
 import socket
+import time
 from typing import List, Dict, Optional, Tuple
 from threading import Lock, Thread
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
@@ -12,161 +13,380 @@ import json
 import os
 import base64
 import random
-from datetime import datetime
 
 """
 Codemaster module - Implements the game server and game logic
 """
 
 class Codemaster:
-    def __init__(self, host='0.0.0.0', port=12345):
+    """
+    Codemaster class - Manages the game server and game state
+    
+    Attributes:
+        sequence (List[str]): Hidden color sequence for players to guess
+        players (List[socket]): Connected player sockets
+        current_turn (int): Current player's turn
+        game_over (bool): Game state flag
+    """
+    
+    def __init__(self, host='0.0.0.0', port=25079):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.bind((host, port))
         self.server.listen(2)
-        
-        # Game state
-        self.colors = ["RED", "BLUE", "GREEN", "YELLOW", "BLACK", "WHITE"]
-        self.sequence = []  # Initialize empty sequence
+        # Basic setup
+        self.sequence = []
         self.players = []
         self.current_turn = 0
+        self.player_count = 0
         self.game_over = False
+        self.sequence_length = 3  # Add this line
+        self.valid_colors = ["RED", "BLUE", "GREEN", "YELLOW", "BLACK", "WHITE"]
         
-        # Generate sequence after initialization
-        self.sequence = self.generate_sequence()
+        # Thread safety
+        self.turn_lock = Lock()
+        self.connection_lock = Lock()
         
-        # Security setup (simplified)
+        # Security components
         self.private_key, self.public_key = SecureProtocol.generate_keypair("codemaster")
         self.secure_channels = {}
-        
-        print(f"Secret sequence: {self.sequence}")
+        self.active_connections = {}
+        self.logger = SecurityLogger('codemaster')
 
-    def generate_sequence(self, length=5) -> List[str]:
-        """Generate random color sequence of specified length"""
-        if len(self.colors) < length:
-            raise ValueError(f"Need at least {length} colors")
-        # Use random.sample instead of choices to ensure unique colors
-        return random.sample(self.colors, length)
-
-    def check_guess(self, guess: list) -> str:
-        """Task 3.2: Compare guess with sequence and provide feedback"""
-        if len(guess) != len(self.sequence):
-            return "Invalid guess length"
-            
-        exact = sum(1 for g, s in zip(guess, self.sequence) if g == s)
-        # Count color matches (right color, wrong position)
-        color_matches = sum(min(guess.count(c), self.sequence.count(c)) for c in set(guess)) - exact
-        
-        return "WIN" if exact == len(self.sequence) else f"{exact} exact, {color_matches} color matches"
-
-    def handle_player(self, conn: socket.socket, player_id: int):
-        try:
-            # Setup secure channel
-            self.setup_secure_connection(conn, player_id)
-            
-            while not self.game_over:
-                if player_id != self.current_turn:
-                    continue
-                
-                # Process guess
-                guess = self.receive_guess(conn, player_id)
-                if not guess:
-                    break
-                
-                # Send feedback
-                feedback = self.check_guess(guess)
-                self.send_feedback(conn, player_id, feedback)
-                
-                if feedback == "WIN":
-                    self.broadcast_winner(player_id)
-                    break
-                
-                self.current_turn = (self.current_turn + 1) % len(self.players)
-                
-        finally:
+    def handle_player_disconnect(self, conn: socket.socket, addr: Tuple[str, int]) -> None:
+        with self.connection_lock:
+            if conn in self.active_connections:
+                del self.active_connections[conn]
             if conn in self.players:
                 self.players.remove(conn)
+            self.logger.log_security_event('player_disconnect', f'Player at {addr} disconnected')
 
-    def setup_secure_connection(self, conn: socket.socket, player_id: int) -> None:
-        """Setup secure connection with a player"""
-        try:
-            # Basic handshake
-            client_public_key = serialization.load_pem_public_key(conn.recv(4096))
-            conn.send(SecureProtocol.export_public_key(self.public_key))
+    def broadcast_message(self, message: dict, exclude: Optional[socket.socket] = None) -> None:
+        for player in self.players:
+            if player != exclude:
+                try:
+                    player.send(json.dumps(message).encode())
+                except Exception as e:
+                    self.logger.log_error('broadcast_failed', str(e))
+
+    def generate_sequence(self, colors: List[str], length: int = 3) -> None:
+        """Generate a random sequence of unique colors"""
+        self.sequence = random.sample([c.upper() for c in colors], length)
+
+    def provide_feedback(self, guess: List[str]) -> Tuple[int, int]:
+        # Normalize both sequence and guess to uppercase
+        sequence_colors = [color.upper() for color in self.sequence]
+        guess_colors = [color.upper() for color in guess]
+        
+        # Validate colors first
+        if not all(color in self.valid_colors for color in guess_colors):
+            return 0, 0  # Invalid colors
             
-            # Setup secure channel
-            session_key = SecureProtocol.generate_session_key()
-            encrypted_key = client_public_key.encrypt(session_key, padding.OAEP(
-                mgf=padding.MGF1(algorithm=hashes.SHA256()),
-                algorithm=hashes.SHA256(),
-                label=None
-            ))
-            conn.send(encrypted_key)
+        exact_matches = sum(1 for s, g in zip(sequence_colors, guess_colors) if s == g)
+        color_matches = sum(min(sequence_colors.count(color), guess_colors.count(color)) 
+                          for color in set(guess_colors)) - exact_matches
+        return exact_matches, color_matches
+
+    def setup_secure_channel(self, conn: socket.socket, player_id: int, player_public_key: rsa.RSAPublicKey) -> dict:
+        try:
+            # Generate session key
+            cipher_type = 'AES'
+            session_key = SecureProtocol.generate_session_key(cipher_type)
+            
+            # Encrypt session key for player
+            encrypted_key = player_public_key.encrypt(
+                session_key,
+                padding.OAEP(
+                    mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                    algorithm=hashes.SHA256(),
+                    label=None
+                )
+            )
             
             # Create secure channel
-            self.secure_channels[player_id] = SecureMessage(SecureProtocol.CIPHER_TYPE, session_key)
+            self.secure_channels[player_id] = SecureMessage(cipher_type, session_key)
             
+            return {
+                'cipher': cipher_type,
+                'key': base64.b64encode(encrypted_key).decode('utf-8')
+            }
         except Exception as e:
-            print(f"Error setting up secure connection: {e}")
+            self.logger.log_error('secure_channel_setup_failed', str(e))
             raise
 
-    def receive_guess(self, conn: socket.socket, player_id: int) -> Optional[List[str]]:
-        """Receive and decrypt player's guess"""
+    def handle_player(self, conn: socket.socket, addr: Tuple[str, int]) -> None:
         try:
-            data = conn.recv(1024).decode()
-            if not data:
-                return None
-                
-            encrypted_data = json.loads(data)
+            player_id = self.player_count
+            self.player_count += 1
+            print(f"\nPlayer {player_id + 1} connected from {addr}")
             
-            # Convert base64 to bytes
-            encrypted_data['data'] = base64.b64decode(encrypted_data['data'])
-            encrypted_data['mac'] = base64.b64decode(encrypted_data['mac'])
-            encrypted_data['iv'] = base64.b64decode(encrypted_data['iv'])
+            # Receive client's ciphers first
+            client_ciphers = json.loads(conn.recv(1024).decode())
             
-            # Decrypt guess
-            guess = self.secure_channels[player_id].decrypt(encrypted_data)
-            return [c.strip().upper() for c in guess.split(',')]
+            # Receive and load client's public key
+            client_key_data = conn.recv(4096)
+            try:
+                client_public_key = serialization.load_pem_public_key(
+                    client_key_data,
+                    backend=None
+                )
+            except ValueError as e:
+                self.logger.log_error('key_load_error', f'Invalid key format received: {str(e)}')
+                raise
             
+            # Send our public key in PEM format
+            conn.send(SecureProtocol.export_public_key(self.public_key))
+            
+            with self.connection_lock:
+                self.players.append(conn)
+                self.active_connections[conn] = GameSession(os.urandom(16).hex(), 'AES')
+            
+            # Setup secure communication with client's public key
+            encrypted_key_data = self.setup_secure_channel(conn, player_id, client_public_key)
+            conn.send(json.dumps(encrypted_key_data).encode())
+            
+            print(f"Player {player_id + 1} successfully authenticated")
+            print(f"Current sequence: {', '.join(self.sequence)}")  # Add this line to show sequence
+            
+            if len(self.players) < 2:
+                print(f"Waiting for {2 - len(self.players)} more player(s)...")
+            else:
+                print("\nGame is starting!")
+                print(f"Hidden sequence has {len(self.sequence)} colors")
+            
+            while not self.game_over:
+                try:
+                    if player_id != self.current_turn:
+                        # Instead of sending messages, just sleep briefly and continue
+                        time.sleep(0.1)
+                        continue
+
+                    encrypted_data = conn.recv(1024).decode()
+                    if not encrypted_data:
+                        continue
+
+                    encrypted_guess = json.loads(encrypted_data)
+                    guess = self.secure_channels[player_id].decrypt(encrypted_guess).split(',')
+                    guess = [g.strip().upper() for g in guess]
+                    
+                    feedback = self.provide_feedback(guess)
+                    
+                    if feedback[0] == len(self.sequence):
+                        win_message = f"Player {player_id + 1} wins! The sequence was: {', '.join(self.sequence)}"
+                        encrypted_win = self.secure_channels[player_id].encrypt(
+                            GameSession.pad_data(win_message.encode())
+                        )
+                        self.game_over = True
+                        self.broadcast_message({
+                            'game_over': True,
+                            'winner': player_id,
+                            'message': win_message,
+                            'sequence': self.sequence
+                        })
+                        break
+
+                    feedback_message = f"{feedback[0]} exact matches, {feedback[1]} color matches"
+                    feedback_padded = GameSession.pad_data(feedback_message.encode())
+                    secure_msg = self.secure_channels[player_id].encrypt(feedback_padded)
+                    
+                    # Convert bytes to base64 before sending
+                    if isinstance(secure_msg.get('data'), bytes):
+                        secure_msg['data'] = base64.b64encode(secure_msg['data']).decode('utf-8')
+                    if isinstance(secure_msg.get('mac'), bytes):
+                        secure_msg['mac'] = base64.b64encode(secure_msg['mac']).decode('utf-8')
+                    
+                    # Send feedback as a single message
+                    conn.send(json.dumps({'feedback': secure_msg}).encode())
+                    
+                    # Update turn only after successful guess processing
+                    self.current_turn = (self.current_turn + 1) % len(self.players)
+                    
+                except socket.error as e:
+                    self.logger.log_error('socket_error', str(e))
+                    break
+                except Exception as e:
+                    self.logger.log_error('turn_processing_error', str(e))
+                    traceback.print_exc()
+                    break
+                    
+        except ConnectionResetError:
+            self.logger.log_error('connection_reset', f'Connection reset by {addr}')
         except Exception as e:
-            print(f"Error receiving guess: {e}")
+            self.logger.log_error('player_handler_error', str(e))
             traceback.print_exc()
-            return None
+        finally:
+            self.handle_player_disconnect(conn, addr)
 
-    def send_feedback(self, conn: socket.socket, player_id: int, feedback: str) -> None:
-        """Encrypt and send feedback to player"""
+    def process_player_turn(self, conn: socket.socket, player_id: int) -> str:
         try:
-            # Encrypt feedback
-            encrypted_feedback = self.secure_channels[player_id].encrypt(feedback)
+            # Receive and decrypt guess
+            encrypted_data = conn.recv(1024).decode()
+            if not encrypted_data:
+                return "Invalid guess"
+                
+            encrypted_guess = json.loads(encrypted_data)
+            if 'data' in encrypted_guess:
+                # Convert base64 back to bytes
+                encrypted_guess['data'] = base64.b64decode(encrypted_guess['data'])
+            if 'mac' in encrypted_guess:
+                encrypted_guess['mac'] = base64.b64decode(encrypted_guess['mac'])
+                
+            # Get the decrypted guess and handle both string and bytes types
+            guess = self.secure_channels[player_id].decrypt(encrypted_guess)
+            guess_str = guess if isinstance(guess, str) else guess.decode()
+            feedback = self.check_guess(guess_str.strip())
             
-            # Convert bytes to base64
-            encrypted_feedback['data'] = base64.b64encode(encrypted_feedback['data']).decode('utf-8')
-            encrypted_feedback['mac'] = base64.b64encode(encrypted_feedback['mac']).decode('utf-8')
-            encrypted_feedback['iv'] = base64.b64encode(encrypted_feedback['iv']).decode('utf-8')
+            # Pad feedback before encryption
+            feedback_padded = GameSession.pad_data(feedback.encode())
+            secure_msg = self.secure_channels[player_id].encrypt(feedback_padded)
             
-            # Send response
-            conn.send(json.dumps(encrypted_feedback).encode())
+            if isinstance(secure_msg.get('data'), bytes):
+                secure_msg['data'] = base64.b64encode(secure_msg['data']).decode('utf-8')
+            if isinstance(secure_msg.get('mac'), bytes):
+                secure_msg['mac'] = base64.b64encode(secure_msg['mac']).decode('utf-8')
+                
+            # Send response back to the player
+            response = json.dumps({'feedback': secure_msg})
+            conn.send(response.encode())
+            
+            return feedback
             
         except Exception as e:
-            print(f"Error sending feedback: {e}")
+            self.logger.log_error('turn_processing_error', str(e))
+            traceback.print_exc()
+            return "Error processing turn"
 
-    def broadcast_winner(self, winner_id: int) -> None:
-        """Broadcast winner announcement to all players"""
-        message = {
+    def check_key_rotation(self, conn: socket.socket) -> None:
+        if self.active_connections[conn].should_rotate_key():
+            new_key = self.active_connections[conn].rotate_key()
+            encrypted_keys = self.ca.distribute_keys('codemaster', 'AES', new_key)
+            self.broadcast_message({'key_rotation': encrypted_keys})
+
+    def end_game(self, winner_id: int) -> None:
+        self.game_over = True
+        self.broadcast_message({
             'game_over': True,
             'winner': winner_id,
             'sequence': self.sequence
+        })
+
+    def check_guess(self, guess):
+        # Normalize guesses to uppercase and strip whitespace
+        guess_colors = [color.strip().upper() for color in guess.split(',')]
+        sequence_colors = [color.upper() for color in self.sequence]
+        
+        if len(guess_colors) != 3:  # Changed to check for 3 colors
+            return "Invalid guess length - please enter exactly 3 colors"
+        
+        exact = 0
+        color_matches = 0
+        temp_sequence = sequence_colors.copy()
+        temp_guess = guess_colors.copy()
+
+        # Check exact matches
+        for i in range(len(self.sequence)):
+            if temp_guess[i] == temp_sequence[i]:
+                exact += 1
+                temp_guess[i] = temp_sequence[i] = None
+
+        # Check color matches
+        for i in range(len(temp_sequence)):
+            if temp_guess[i] is None:
+                continue
+            for j in range(len(temp_sequence)):
+                if temp_sequence[j] and temp_guess[i] == temp_sequence[j]:
+                    color_matches += 1
+                    temp_sequence[j] = None
+                    break
+
+        if exact == len(self.sequence):
+            self.game_over = True
+            return "WIN"
+        
+        return f"{exact} exact, {color_matches} color matches"
+
+    def broadcast_game_state(self, player_id: int, guess: str, feedback: str) -> None:
+        # Add this missing method
+        message = {
+            'player': player_id,
+            'guess': guess,
+            'feedback': feedback
         }
-        for player_id, player_conn in enumerate(self.players):
-            try:
-                if player_conn:
-                    encrypted_msg = self.secure_channels[player_id].encrypt(json.dumps(message))
-                    player_conn.send(json.dumps(encrypted_msg).encode())
-            except Exception as e:
-                print(f"Error broadcasting to player {player_id}: {e}")
+        self.broadcast_message(message)
+
+    def handle_player_turn(self, conn: socket.socket, player_id: int) -> None:
+        if player_id != self.current_player:
+            return {'error': 'Not your turn'}
+            
+        # Process turn
+        result = self.process_player_turn(conn, player_id)
+        
+        # Update turn
+        self.current_player = (self.current_player + 1) % self.total_players
+        
+        return result
 
     def run(self):
-        print("\nWaiting for players...")
+        print("\nCodemaster is ready and listening for connections...")
+        print(f"Players can connect using: python player.py <player_name>")
+        
         while len(self.players) < 2:
-            conn, _ = self.server.accept()
-            self.players.append(conn)
-            Thread(target=self.handle_player, args=(conn, len(self.players)-1)).start()
+            try:
+                conn, addr = self.server.accept()
+                Thread(target=self.handle_player, args=(conn, addr)).start()
+            except Exception as e:
+                self.logger.log_error('connection_error', str(e))
+                continue
+
+    def handle_handshake(self, conn: socket.socket) -> bool:
+        """
+        Handles secure connection handshake with a player
+        
+        Args:
+            conn: Player's socket connection
+            
+        Returns:
+            bool: True if handshake successful, False otherwise
+        """
+        try:
+            # Receive supported ciphers
+            client_ciphers = json.loads(conn.recv(1024).decode())
+            
+            # Exchange public keys
+            client_public_key_bytes = conn.recv(4096)
+            client_public_key = serialization.load_pem_public_key(
+                client_public_key_bytes,
+                backend=None
+            )
+            conn.send(SecureProtocol.export_public_key(self.public_key))
+            
+            # Select cipher and generate session key
+            cipher_type = SecureProtocol.negotiate_cipher(
+                SecureProtocol.SUPPORTED_CIPHERS,
+                client_ciphers
+            )
+            session_key = SecureProtocol.generate_session_key(cipher_type)
+            
+            # Encrypt and send session key
+            encrypted_key = client_public_key.encrypt(
+                session_key,
+                padding.OAEP(
+                    mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                    algorithm=hashes.SHA256(),
+                    label=None
+                )
+            )
+            
+            # Convert bytes to base64 before sending
+            conn.send(json.dumps({
+                'cipher': cipher_type,
+                'key': base64.b64encode(encrypted_key).decode('utf-8')
+            }).encode())
+            
+            # Setup secure channel
+            self.secure_channels[conn] = SecureMessage(cipher_type, session_key)
+            return True
+            
+        except Exception as e:
+            self.logger.log_error('handshake_failed', str(e))  # Changed from error to log_error
+            traceback.print_exc()
+            return False

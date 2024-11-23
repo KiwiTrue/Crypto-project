@@ -1,23 +1,32 @@
+
 """
 Secure Protocol Handler - Implements secure key distribution and cipher negotiation
 """
 import os
-from typing import Dict, Tuple, List, Union
+from typing import Dict, Tuple, List
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
 from cryptography.hazmat.primitives import hashes, serialization
 import json
-import base64
 
 class SecureProtocol:
-    CIPHER_TYPE = 'AES'  # Simplify to use single cipher type
-    KEY_SIZE = 32  # 256-bit AES key
+    SUPPORTED_CIPHERS = ['AES', 'BLOWFISH', 'DES']
     
     @staticmethod
-    def generate_keypair(name: str) -> Tuple[rsa.RSAPrivateKey, rsa.RSAPublicKey]:
+    def generate_keypair(save_path: str) -> Tuple[rsa.RSAPrivateKey, rsa.RSAPublicKey]:
+        """Generate and save keypair"""
         private_key = rsa.generate_private_key(
             public_exponent=65537,
             key_size=2048
         )
+        
+        # Save private key
+        with open(f"{save_path}.pem", "wb") as f:
+            f.write(private_key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.PKCS8,
+                encryption_algorithm=serialization.NoEncryption()
+            ))
+        
         return private_key, private_key.public_key()
     
     @staticmethod
@@ -29,55 +38,15 @@ class SecureProtocol:
         )
     
     @staticmethod
-    def cipher_preference_order() -> List[str]:
-        """Returns ciphers in order of security preference"""
-        return ['AES', 'BLOWFISH', 'DES']
-    
-    @staticmethod
     def negotiate_cipher(local_ciphers: List[str], remote_ciphers: List[str]) -> str:
-        """Select strongest common cipher using preference order"""
-        for cipher in SecureProtocol.cipher_preference_order():
+        """Select strongest common cipher"""
+        for cipher in SecureProtocol.SUPPORTED_CIPHERS:
             if cipher in local_ciphers and cipher in remote_ciphers:
                 return cipher
         raise ValueError("No common cipher found")
-
+    
     @staticmethod
-    def generate_session_id() -> str:
-        """Generate a unique session identifier"""
-        return base64.b64encode(os.urandom(16)).decode('utf-8')
-
-    @staticmethod
-    def create_secure_session(cipher_type: str) -> Tuple[str, bytes]:
-        """Create a new secure session with initial key"""
-        session_id = SecureProtocol.generate_session_id()
-        key = SecureProtocol.generate_session_key(cipher_type)
-        return session_id, key
-
-    @staticmethod
-    def generate_session_key() -> bytes:
-        return os.urandom(32)  # 256-bit key for AES
-
-    @staticmethod
-    def create_secure_message(data: Union[str, bytes], cipher_type: str) -> Dict:
-        """Create a properly formatted secure message"""
-        return {
-            'cipher': cipher_type,
-            'data': data,
-            'mac': None  # Will be added during encryption
-        }
-
-    @staticmethod
-    def pad_message(message: str) -> bytes:
-        """Pad message to block size"""
-        if isinstance(message, str):
-            message = message.encode()
-        from cryptography.hazmat.primitives import padding
-        padder = padding.PKCS7(128).padder()
-        return padder.update(message) + padder.finalize()
-
-    @staticmethod
-    def unpad_message(padded_data: bytes) -> str:
-        """Remove padding and return string"""
-        from cryptography.hazmat.primitives import padding
-        unpadder = padding.PKCS7(128).unpadder()
-        return (unpadder.update(padded_data) + unpadder.finalize()).decode()
+    def generate_session_key(cipher_type: str) -> bytes:
+        """Generate appropriate key for chosen cipher"""
+        key_sizes = {'AES': 32, 'BLOWFISH': 32, 'DES': 8}
+        return os.urandom(key_sizes[cipher_type])
