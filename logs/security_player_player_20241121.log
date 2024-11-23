@@ -1,3 +1,0 @@
-2024-11-21 16:55:33,034 - player_player - INFO - [9176] - SECURITY_EVENT: logger_init - Logger initialized for player_player
-2024-11-21 16:56:01,303 - player_player - ERROR - [9176] - SECURITY_ERROR: communication_error - timed out
-2024-11-21 16:56:01,304 - player_player - INFO - [9176] - SECURITY_EVENT: session_end - Player player disconnected
