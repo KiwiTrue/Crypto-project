@@ -27,6 +27,10 @@ The game involves:
 - BLACK
 - WHITE
 
+## 🎥 Video showcase
+[![YouTube video showcase](https://img.youtube.com/vi/-GdgR3BcJ5I/0.jpg)](https://www.youtube.com/watch?v=-GdgR3BcJ5I)
+
+
 ## 🚀 Getting Started
 
 ### Prerequisites
