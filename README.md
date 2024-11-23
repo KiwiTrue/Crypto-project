@@ -29,9 +29,9 @@ The game involves:
 
 ## 🎥 Video showcase
 
-Click to play ⬇️
-[![YouTube video showcase](https://img.youtube.com/vi/-GdgR3BcJ5I/0.jpg)](https://www.youtube.com/watch?v=-GdgR3BcJ5I)
-
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=-GdgR3BcJ5I
+" target="_blank"><img src="http://img.youtube.com/vi/-GdgR3BcJ5I/0.jpg" 
+alt="No no no no..." width="240" height="180" border="10" /></a>
 
 ## 🚀 Getting Started
 
