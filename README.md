@@ -38,12 +38,9 @@ Watch here ⬇️⬇️
 
 ### Prerequisites
 ```bash
+pip install cryptography numpy
 git clone https://github.com/KiwiTrue/Crypto-project.git
 cd Crypto-project
-```
-```
-# Install required packages
-pip install cryptography numpy
 ```
 
 ### Starting the Game
