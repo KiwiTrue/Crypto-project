@@ -300,7 +300,39 @@ def unpad_data(padded_data: bytes) -> bytes:
     unpadder = padding.PKCS7(128).unpadder()
     return unpadder.update(padded_data) + unpadder.finalize()
 
+"""
+Encryption Implementation Module
+
+Features:
+Historical Ciphers:
+- Caesar, Playfair, Vigenère
+- Monoalphabetic substitution
+- Homophonic substitution
+- Rail fence and columnar transposition
+
+Modern Ciphers:
+- AES (256-bit keys)
+- DES and Triple DES
+- Blowfish
+- RC4 stream cipher
+
+Security Features:
+- HMAC authentication
+- PKCS7 padding
+- IV management
+- Key derivation
+"""
+
 class SecureMessage:
+    """
+    Unified encryption interface for all supported ciphers.
+    
+    Features:
+    - Cipher selection and initialization
+    - Message encryption/decryption
+    - Authentication (HMAC)
+    - Error handling
+    """
     SUPPORTED_CIPHERS = {
         'CAESAR': (caesar_encrypt, caesar_decrypt),
         'MONOALPHABETIC': (monoalphabetic_encrypt, monoalphabetic_decrypt),

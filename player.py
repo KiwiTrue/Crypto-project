@@ -1,6 +1,13 @@
 """
-Player module - Implements the game client
+Game Client Implementation
+
+Features:
+- Secure server connection
+- Encrypted game communication
+- Input validation
+- Real-time feedback display
 """
+
 import socket
 import random  # Add this import for the random player name generation
 from typing import Optional, Union
@@ -17,13 +24,19 @@ import base64  # Add this import at the top of the file
 
 class Player:
     """
-    Player class - Handles game client functionality
+    Client implementation for game interaction.
     
-    Attributes:
-        name (str): Player name
-        client (socket): Client socket connection
-        session (GameSession): Current game session
-        game_active (bool): Game state flag
+    Security Features:
+    - RSA key generation
+    - Secure handshake protocol
+    - Encrypted message exchange
+    - Session management
+    
+    Game Features:
+    - Color sequence validation
+    - Guess submission
+    - Feedback processing
+    - Turn management
     """
     
     def __init__(self, name: str, host: str = 'localhost', port: int = 25079):

@@ -18,15 +18,31 @@ import random
 Codemaster module - Implements the game server and game logic
 """
 
+"""
+Game Server Implementation
+
+Features:
+- Multi-player game management
+- Secure communication channels
+- Turn-based gameplay control
+- Real-time game state updates
+"""
+
 class Codemaster:
     """
-    Codemaster class - Manages the game server and game state
+    Game server implementation with secure communication.
     
-    Attributes:
-        sequence (List[str]): Hidden color sequence for players to guess
-        players (List[socket]): Connected player sockets
-        current_turn (int): Current player's turn
-        game_over (bool): Game state flag
+    Security Features:
+    - Per-player secure channels
+    - Session management
+    - Key rotation
+    - Message authentication
+    
+    Game Features:
+    - Random sequence generation
+    - Turn management
+    - Player synchronization
+    - Game state tracking
     """
     
     def __init__(self, host='0.0.0.0', port=25079):

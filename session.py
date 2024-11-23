@@ -1,6 +1,13 @@
 """
-Session module - Handles secure game sessions
+Session Management Module
+
+Features:
+- Secure session establishment
+- Key rotation mechanism
+- Session state tracking
+- Message padding/unpadding
 """
+
 import os
 from datetime import datetime, timedelta
 from cryptography.hazmat.primitives import padding
@@ -10,13 +17,19 @@ import random
 
 class GameSession:
     """
-    GameSession class - Manages secure game sessions
+    Manages game sessions and security features.
     
-    Attributes:
-        session_id (str): Unique session identifier
-        cipher_type (str): Selected encryption cipher
-        key (bytes): Current session key
-        is_valid (bool): Session validity flag
+    Security Features:
+    - Unique session identifiers
+    - Automatic key rotation
+    - Backup key management
+    - Session validation
+    
+    Game Features:
+    - Sequence generation
+    - Guess validation
+    - Feedback calculation
+    - State persistence
     """
     def __init__(self, session_id: str, cipher_type: str, 
                  rotation_interval: int = 15,

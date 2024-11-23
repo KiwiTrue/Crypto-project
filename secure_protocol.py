@@ -1,6 +1,11 @@
-
 """
 Secure Protocol Handler - Implements secure key distribution and cipher negotiation
+
+Key Features:
+- RSA keypair generation and management
+- Public key exchange mechanism
+- Cipher negotiation between parties 
+- Session key generation
 """
 import os
 from typing import Dict, Tuple, List
@@ -9,6 +14,15 @@ from cryptography.hazmat.primitives import hashes, serialization
 import json
 
 class SecureProtocol:
+    """
+    Manages cryptographic protocols and key exchange.
+    
+    Security Features:
+    - 2048-bit RSA keys for asymmetric encryption
+    - Support for multiple symmetric ciphers
+    - Secure key storage and distribution
+    - Protocol negotiation
+    """
     SUPPORTED_CIPHERS = ['AES', 'BLOWFISH', 'DES']
     
     @staticmethod
