@@ -1,160 +1,116 @@
-### [README.md](https://github.com/KiwiTrue/README.md)
-
 # 🎮 Secure Mastermind Game
 
-<div align="center">
+A secure implementation of the classic Mastermind game with network play and encryption.
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
-![Python](https://img.shields.io/badge/python-3.7+-green)
-![License](https://img.shields.io/badge/license-MIT-orange)
+## 🎯 Game Overview
 
-A secure implementation of the classic Mastermind game featuring network play, advanced cryptography, and GUI support.
+The game involves:
+- Two players competing to guess a secret color sequence
+- A Codemaster (server) that generates and validates guesses
+- Secure communication between players and server
+- Turn-based gameplay with real-time feedback
 
-</div>
+## 🎲 How to Play
 
----
+1. The Codemaster generates a random sequence of 3 unique colors
+2. Players take turns guessing the sequence
+3. After each guess, players receive feedback:
+   - Number of exact matches (right color, right position)
+   - Number of color matches (right color, wrong position)
+4. First player to guess the sequence correctly wins!
 
-## ✨ Features
+### Available Colors
+- RED
+- BLUE
+- GREEN
+- YELLOW
+- BLACK
+- WHITE
 
-### 🎲 Core Game
-- Two-player network gameplay with secure communication
-- Real-time feedback and game state updates
-- Automated sequence generation
-- Turn-based gameplay management
+## 🚀 Getting Started
 
-### 🔒 Security Features
-<details>
-<summary>Click to expand</summary>
-
-#### Encryption Algorithms
-- **Historical Ciphers:**
-  - Caesar, Playfair, Vigenere, Hill, Affine, and more
-- **Modern Symmetric Ciphers:**
-  - AES, DES, RC4, and others
-  
-#### Authentication & Management
-- Session management with key rotation
-- HMAC message authentication
-- Comprehensive security logging
-
-</details>
-
-### 🖥️ User Interface
-- Command Line Interface (CLI)
-- Graphical User Interface (GUI)
-  - Real-time game history
-  - Interactive color picker
-  - Status monitoring
-  - Error notifications
-
-## 📋 Requirements
-
-```python
-cryptography>=3.4.7
-numpy>=1.21.0
-tkinter (included with Python)
-```
-
-## 🚀 Quick Start
-
-### Installation
+### Prerequisites
 ```bash
-git clone https://github.com/KiwiTrue/mastermind-secure.git
-cd mastermind-secure
-pip install numpy cryptography
+# Install required packages
+pip install cryptography numpy
 ```
 
-### Running the Game
+### Starting the Game
 
-#### Server
+1. Start the server (Codemaster):
 ```bash
 python main.py
 ```
 
-#### Client
+2. Start Player 1:
 ```bash
-python player.py <player_name>
+python player.py Player1
 ```
 
-## 📖 Game Rules
+3. Start Player 2:
+```bash
+python player.py Player2
+```
 
-1. 🎲 Codemaster generates a random 5-color sequence
-2. 🎮 Players take turns guessing the sequence
-3. ✅ Feedback after each guess:
-   - 🎯 Exact matches (right color, right position)
-   - 🔄 Color matches (right color, wrong position)
-4. 🏆 First correct guess wins!
+### Making Guesses
+- Enter colors as comma-separated values
+- Example: `red,blue,green`
+- Colors are case-insensitive
+- Must enter exactly 3 unique colors
 
-### Available Colors
-| Color  | Code |
-|--------|------|
-| RED    | 🔴   |
-| BLUE   | 🔵   |
-| GREEN  | 💚   |
-| YELLOW | 💛   |
-| BLACK  | ⚫   |
-| WHITE  | ⚪   |
+## 📝 Example Game
+
+Server output:
+```
+Codemaster is ready and listening for connections...
+Secret sequence: RED, BLUE, GREEN
+```
+
+Player 1 input/output:
+```
+Enter your guess: black,white,yellow
+Feedback: 0 exact matches, 0 color matches
+
+Enter your guess: red,blue,green
+Feedback: WIN! Game Over
+```
+
+## 🔒 Security Features
+- Encrypted communication
+- Secure key exchange
+- Session management
+- Input validation
 
 ## 📁 Project Structure
-
 ```
-mastermind-secure/
-├── 🎮 main.py           # Server & initialization
-├── 🎲 codemaster.py     # Game logic
-├── 👤 player.py         # CLI client
-├── 🔐 ciphers.py        # Encryption
-├── 📝 session.py        # Session management
-├── 📊 logger.py         # Security logging
-└── 🚀 launcher.py       # Quick start utility
+mastermind/
+├── main.py       # Server startup
+├── codemaster.py # Game logic
+├── player.py     # Client implementation
+├── session.py    # Session handling
+├── ciphers.py    # Encryption
+└── README.md     # Documentation
 ```
 
-## 🔒 Security Architecture
+## ⚠️ Important Notes
+- Run the server first before connecting players
+- Each game requires exactly 2 players
+- Colors must be unique in guesses
+- Use commas to separate colors
+- Exit with Ctrl+C to stop server/client
 
-<details>
-<summary>Authentication</summary>
-
-- Public/private key pairs
-- Secure session channels
-</details>
-
-<details>
-<summary>Encryption</summary>
-
-- Multiple cipher support
-- Automatic key rotation
-- HMAC authentication
-- IV management
-</details>
-
-<details>
-<summary>Session Management</summary>
-
-- Unique session IDs
-- Key rotation
-- State tracking
-</details>
-
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) for details.
-
----
-
-<div align="center">
-Made with ❤️ by Your Team
-</div>
+## 🐛 Troubleshooting
+- If connection fails, ensure server is running
+- Check port 25079 is available
+- Verify color spelling and format
+- Use only listed colors
 ```
 
-Key improvements:
-1. Added emojis for visual appeal
-2. Created collapsible sections using `<details>`
-3. Added badges at the top
-4. Better section organization with horizontal rules
-5. Added tables for better data presentation
-6. Improved code block formatting
-7. Added centered elements
-8. Better visual hierarchy with headers
-9. Added icons to project structure
-10. Added centered footer
-
+This README provides:
+1. Clear game overview
+2. Step-by-step setup instructions
+3. Usage examples
+4. Security features
+5. Project structure
+6. Troubleshooting tips
+7. Important notes for users
